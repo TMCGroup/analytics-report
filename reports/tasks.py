@@ -1,7 +1,6 @@
-from celery.decorators import task
+from celery.schedules import crontab
+from celery.task import periodic_task
 from celery.utils.log import get_task_logger
-from celery.task.schedules import crontab
-from celery.decorators import periodic_task
 from .models import Group, Contact, Message
 
 
