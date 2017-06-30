@@ -92,31 +92,45 @@ class Contact(models.Model):
         for contact_batch in client.get_contacts().iterfetches(retry_on_rate_exceed=True):
             for contact in contact_batch:
                 grp = []
-                # fld = []
+                fld = []
                 for g in contact.groups:
                     grp.append(g.name)
 
-                # for f in contact.fields:
-                #     fld.append(f)
+                for f in contact.fields:
+                    fld.append((f, contact.fields[f]))
 
                 if cls.contact_exists(contact):
+                    group = cls.objects.filter(uuid=contact.uuid)
+                    for gp in group.groups:
+                        if gp in grp:
+                            grp.remove(gp)
+                        else:
+                            grp.append(gp)
 
-                    c = cls.objects.filter(uuid=contact.uuid).update(name=contact.name, language=contact.language,
-                                                                     urns=contact.urns, groups=grp,
-                                                                     fields=contact.fields,
-                                                                     blocked=contact.blocked, stopped=contact.stopped,
-                                                                     created_on=contact.created_on,
-                                                                     modified_on=contact.modified_on)
-                    Message.save_messages(client, contact=c)
+                    for fd in group.fields:
+                        if fd in fld:
+                            fld.remove(fd)
+                        else:
+                            fld.append(fd)
+
+                    ct = cls.objects.filter(uuid=contact.uuid).update(name=contact.name, language=contact.language,
+                                                                      urns=contact.urns, groups=grp,
+                                                                      fields=fld,
+                                                                      blocked=contact.blocked, stopped=contact.stopped,
+                                                                      created_on=contact.created_on,
+                                                                      modified_on=contact.modified_on)
+                    Message.save_messages(client, contact=ct)
                     grp[:] = []
+                    fld[:] = []
 
                 else:
-                    c = cls.objects.create(uuid=contact.uuid, name=contact.name, language=contact.language,
-                                           urns=contact.urns, groups=grp, fields=contact.fields,
-                                           blocked=contact.blocked, stopped=contact.stopped,
-                                           created_on=contact.created_on, modified_on=contact.modified_on)
-                    Message.save_messages(client, contact=c)
+                    ct = cls.objects.create(uuid=contact.uuid, name=contact.name, language=contact.language,
+                                            urns=contact.urns, groups=grp, fields=fld,
+                                            blocked=contact.blocked, stopped=contact.stopped,
+                                            created_on=contact.created_on, modified_on=contact.modified_on)
+                    Message.save_messages(client, contact=ct)
                     grp[:] = []
+                    fld[:] = []
 
                     added += 1
 
@@ -124,7 +138,7 @@ class Contact(models.Model):
 
     @classmethod
     def contact_exists(cls, contact):
-        return cls.objects.filter(uuid=contact.uuid).exists()
+        return cls.objects.filter(urns=contact.urns).exists()
 
     @classmethod
     def get_contacts(cls):
@@ -144,8 +158,8 @@ class Contact(models.Model):
                 cleaned = contact.urns[7:-2]
                 cls.objects.filter(uuid=contact.uuid).update(urns=cleaned)
 
-    def __str__(self):
-        return str(self.urns)
+    def __unicode__(self):
+        return self.urns
 
 
 class Message(models.Model):
@@ -168,7 +182,7 @@ class Message(models.Model):
     def save_messages(cls, client, contact):
         added = 0
 
-        for message_batch in client.get_messages(contact=contact).iterfetches(retry_on_rate_exceed=True):
+        for message_batch in client.get_messages(contact=contact.uuid).iterfetches(retry_on_rate_exceed=True):
             for message in message_batch:
                 if not cls.message_exists(message):
                     cls.objects.create(msg_id=message.id, broadcast=message.broadcast, contact=contact,
