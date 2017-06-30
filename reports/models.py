@@ -23,6 +23,7 @@ class RapidproKey(models.Model):
             client = TembaClient(rkey.host, rkey.key)
             Group.add_groups(client=client)
             Contact.save_contacts(client=client)
+            Flow.add_flows(client=client)
 
     def __str__(self):
         return str(self.workspace)
@@ -100,7 +101,7 @@ class Contact(models.Model):
                     fld.append((f, contact.fields[f]))
 
                 if cls.contact_exists(contact):
-                    group = cls.objects.filter(uuid=contact.uuid)
+                    group = cls.objects.get(uuid=contact.uuid)
                     for gp in group.groups:
                         if gp in grp:
                             grp.remove(gp)
@@ -119,7 +120,8 @@ class Contact(models.Model):
                                                                       blocked=contact.blocked, stopped=contact.stopped,
                                                                       created_on=contact.created_on,
                                                                       modified_on=contact.modified_on)
-                    Message.save_messages(client, contact=ct)
+                    Message.save_messages(client, contact=group)
+                    Run.add_runs(client, contact=group)
                     grp[:] = []
                     fld[:] = []
 
@@ -129,6 +131,7 @@ class Contact(models.Model):
                                             blocked=contact.blocked, stopped=contact.stopped,
                                             created_on=contact.created_on, modified_on=contact.modified_on)
                     Message.save_messages(client, contact=ct)
+                    Run.add_runs(client, contact=ct)
                     grp[:] = []
                     fld[:] = []
 
@@ -271,6 +274,10 @@ class Flow(models.Model):
     uuid = models.CharField(max_length=100)
     name = models.CharField(max_length=100)
     expires = models.IntegerField()
+    active_runs = models.IntegerField(null=True)
+    complete_runs = models.IntegerField(null=True)
+    interrupted_runs = models.IntegerField(null=True)
+    expired_runs = models.IntegerField(null=True)
     created_on = models.DateTimeField()
 
     @classmethod
@@ -280,10 +287,16 @@ class Flow(models.Model):
         for flow in flows:
             if cls.flow_exists(flow):
                 cls.objects.filter(uuid=flow.uuid).update(name=flow.name, expires=flow.expires,
-                                                          created_on=flow.created_on)
+                                                          active_runs=flow.runs['active'],
+                                                          complete_runs=flow.runs['completed'],
+                                                          interrupted_runs=flow.runs['interrupted'],
+                                                          expired_runs=flow.runs['expired'], created_on=flow.created_on)
                 added += 0
             else:
-                cls.objects.create(uuid=flow.uuid, name=flow.name, expires=flow.expires, created_on=flow.created_on)
+                cls.objects.create(uuid=flow.uuid, name=flow.name, expires=flow.expires,
+                                   active_runs=flow.runs['active'], complete_runs=flow.runs['completed'],
+                                   interrupted_runs=flow.runs['interrupted'], expired_runs=flow.runs['expired'],
+                                   created_on=flow.created_on)
                 added += 1
 
         return added
@@ -298,24 +311,23 @@ class Flow(models.Model):
 
 class Run(models.Model):
     run_id = models.IntegerField()
-    responded = models.BooleanField(default=False)
+    flow = models.CharField(max_length=200)
     contact = models.ForeignKey(Contact)
-    flow = models.ForeignKey(Flow)
+    responded = models.BooleanField(default=False)
+    exit_type = models.CharField(max_length=100, null=True, blank=True)
+    exited_on = models.DateTimeField(null=True)
     created_on = models.DateTimeField()
     modified_on = models.DateTimeField()
-    exit_type = models.CharField(max_length=100, null=True, blank=True)
 
     @classmethod
-    def add_runs(cls, client, flow, contact):
+    def add_runs(cls, client, contact):
         added = 0
         for run_batch in client.get_runs(contact=contact.uuid).iterfetches(retry_on_rate_exceed=True):
             for run in run_batch:
                 if not cls.run_exists(run):
-                    r = cls.objects.create(run_id=run.id, responded=run.responded, contact=contact,
-                                           created_on=run.created_on, modified_on=run.modified_on,
-                                           exit_type=run.exit_type, flow=flow)
-                    Step.add_steps(run=r, steps=run.path)
-                    Value.add_values(run=r, values=run.values)
+                    r = cls.objects.create(run_id=run.id, flow=run.flow, contact=contact, responded=run.responded,
+                                           exit_type=run.exit_type, exited_on=run.exited_on,
+                                           created_on=run.created_on, modified_on=run.modified_on)
                     added += 1
 
         return added
@@ -328,70 +340,70 @@ class Run(models.Model):
         return str(self.run_id)
 
 
-class Step(models.Model):
-    node = models.CharField(max_length=100)
-    time = models.DateTimeField()
-    run = models.ForeignKey(Run, on_delete=models.CASCADE)
+# class Step(models.Model):
+#     node = models.CharField(max_length=100)
+#     time = models.DateTimeField()
+#     run = models.ForeignKey(Run, on_delete=models.CASCADE)
+#
+#     @classmethod
+#     def add_steps(cls, run, steps):
+#         added = 0
+#         for step in steps:
+#             if not cls.step_exists(step):
+#                 cls.objects.create(node=step.node, time=step.time, run=run)
+#                 added += 1
+#         return added
+#
+#     @classmethod
+#     def step_exists(cls, step):
+#         return cls.objects.filter(node=step.node).exists()
+#
+#     def _str__(self):
+#         return str(self.node)
+#
+#
+# class Value(models.Model):
+#     value = models.CharField(max_length=100, blank=True)
+#     run = models.ForeignKey(Run, on_delete=models.CASCADE)
+#
+#     @classmethod
+#     def add_values(cls, run, values):
+#         added = 0
+#         for val in values:
+#             if not cls.value_exists(run=run):
+#                 cls.objects.create(value=val, run=run)
+#                 added += 1
+#         return added
+#
+#     @classmethod
+#     def value_exists(cls, run):
+#         return cls.objects.filter(run=run).exists()
+#
+#     def __str__(self):
+#         return str(self.value)
 
-    @classmethod
-    def add_steps(cls, run, steps):
-        added = 0
-        for step in steps:
-            if not cls.step_exists(step):
-                cls.objects.create(node=step.node, time=step.time, run=run)
-                added += 1
-        return added
 
-    @classmethod
-    def step_exists(cls, step):
-        return cls.objects.filter(node=step.node).exists()
-
-    def _str__(self):
-        return str(self.node)
-
-
-class Value(models.Model):
-    value = models.CharField(max_length=100, blank=True)
-    run = models.ForeignKey(Run, on_delete=models.CASCADE)
-
-    @classmethod
-    def add_values(cls, run, values):
-        added = 0
-        for val in values:
-            if not cls.value_exists(run=run):
-                cls.objects.create(value=val, run=run)
-                added += 1
-        return added
-
-    @classmethod
-    def value_exists(cls, run):
-        return cls.objects.filter(run=run).exists()
-
-    def __str__(self):
-        return str(self.value)
-
-
-class Email(models.Model):
-    name = models.CharField(max_length=100)
-    address = models.EmailField(max_length=200)
-    project = models.ForeignKey(Group)
-
-    def __str__(self):
-        return str(self.name)
-
-    @classmethod
-    def add_email(cls, name, address):
-        return cls.objects.create(name=name, address=address)
-
-    @classmethod
-    def send_message_email(cls, file_name):
-        mailing_list = []
-        emails = cls.objects.all()
-        for email in emails:
-            mailing_list.append(email.address)
-
-        email_html_file = '<h4>Please see attached pdf report file</h4>'
-        msg = EmailMessage('mCRAG weekly report', email_html_file, settings.EMAIL_HOST_USER, mailing_list)
-        msg.attach_file(file_name)
-        msg.content_subtype = "html"
-        return msg.send()
+# class Email(models.Model):
+#     name = models.CharField(max_length=100)
+#     address = models.EmailField(max_length=200)
+#     project = models.ForeignKey(Group)
+#
+#     @classmethod
+#     def add_email(cls, name, address):
+#         return cls.objects.create(name=name, address=address)
+#
+#     @classmethod
+#     def send_message_email(cls, file_name):
+#         mailing_list = []
+#         emails = cls.objects.all()
+#         for email in emails:
+#             mailing_list.append(email.address)
+#
+#         email_html_file = '<h4>Please see attached pdf report file</h4>'
+#         msg = EmailMessage('mCRAG weekly report', email_html_file, settings.EMAIL_HOST_USER, mailing_list)
+#         msg.attach_file(file_name)
+#         msg.content_subtype = "html"
+#         return msg.send()
+#
+#     def __str__(self):
+#         return str(self.name)

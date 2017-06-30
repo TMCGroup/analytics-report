@@ -1,10 +1,10 @@
 from django.contrib import admin
-from .models import Contact, Group, Email, Run, Flow, Step, Value, Message, RapidproKey
+from .models import Contact, Group, Run, Flow, Message, RapidproKey
 
 
-class EmailAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'address', 'project')
-    search_fields = ['name']
+# class EmailAdmin(admin.ModelAdmin):
+#     list_display = ('id', 'name', 'address', 'project')
+#     search_fields = ['name']
 
 
 class RapidprokeyAdmin(admin.ModelAdmin):
@@ -37,26 +37,26 @@ class GroupAdmin(admin.ModelAdmin):
 
 
 class RunAdmin(admin.ModelAdmin):
-    list_display = ('id', 'responded', 'contact', 'flow', 'created_on', 'modified_on', 'exit_type')
-    search_fields = ['run_id', 'contact', 'flow',]
+    list_display = ('run_id', 'flow', 'contact', 'responded', 'exit_type', 'exited_on', 'created_on', 'modified_on')
+    search_fields = ['run_id', 'contact', 'flow']
 
 
-class StepAdmin(admin.ModelAdmin):
-    list_display = ('id', 'node', 'time', 'run_id')
-    search_fields = ['node']
-
-
-class ValueAdmin(admin.ModelAdmin):
-    list_display = ('id', 'value', 'run_id')
-    search_fields = ['value']
+# class StepAdmin(admin.ModelAdmin):
+#     list_display = ('id', 'node', 'time', 'run_id')
+#     search_fields = ['node']
+#
+#
+# class ValueAdmin(admin.ModelAdmin):
+#     list_display = ('id', 'value', 'run_id')
+#     search_fields = ['value']
 
 
 admin.site.register(Contact, ContactAdmin)
 admin.site.register(RapidproKey, RapidprokeyAdmin)
 admin.site.register(Message, MessageAdmin)
 admin.site.register(Group, GroupAdmin)
-admin.site.register(Email, EmailAdmin)
+# admin.site.register(Email, EmailAdmin)
 admin.site.register(Run, RunAdmin)
 admin.site.register(Flow, FlowAdmin)
-admin.site.register(Step, StepAdmin)
-admin.site.register(Value, ValueAdmin)
+# admin.site.register(Step, StepAdmin)
+# admin.site.register(Value, ValueAdmin)
