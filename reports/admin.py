@@ -27,7 +27,7 @@ class MessageAdmin(admin.ModelAdmin):
 
 
 class FlowAdmin(admin.ModelAdmin):
-    list_display = ('id', 'uuid', 'name', 'expires', 'created_on')
+    list_display = ('id', 'uuid', 'name', 'active_runs', 'complete_runs', 'interrupted_runs', 'expired_runs', 'created_on')
     search_fields = ['name']
 
 

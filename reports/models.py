@@ -25,7 +25,7 @@ class RapidproKey(models.Model):
             Contact.save_contacts(client=client)
             Flow.add_flows(client=client)
 
-    def __str__(self):
+    def __unicode__(self):
         return str(self.workspace)
 
 
@@ -55,7 +55,7 @@ class Group(models.Model):
     def group_exists(cls, group):
         return cls.objects.filter(uuid=group.uuid).exists()
 
-    def __str__(self):
+    def __unicode__(self):
         return str(self.name)
 
 
@@ -162,7 +162,7 @@ class Contact(models.Model):
                 cls.objects.filter(uuid=contact.uuid).update(urns=cleaned)
 
     def __unicode__(self):
-        return self.urns
+        return str(self.urns)
 
 
 class Message(models.Model):
@@ -266,7 +266,7 @@ class Message(models.Model):
                 cleaned = msg.urn[4:]
                 cls.objects.filter(msg_id=msg.id).update(urn=cleaned)
 
-    def __str__(self):
+    def __unicode__(self):
         return self.urn
 
 
@@ -287,15 +287,15 @@ class Flow(models.Model):
         for flow in flows:
             if cls.flow_exists(flow):
                 cls.objects.filter(uuid=flow.uuid).update(name=flow.name, expires=flow.expires,
-                                                          active_runs=flow.runs['active'],
-                                                          complete_runs=flow.runs['completed'],
-                                                          interrupted_runs=flow.runs['interrupted'],
-                                                          expired_runs=flow.runs['expired'], created_on=flow.created_on)
+                                                          active_runs=flow.runs.active,
+                                                          complete_runs=flow.runs.completed,
+                                                          interrupted_runs=flow.runs.interrupted,
+                                                          expired_runs=flow.runs.expired, created_on=flow.created_on)
                 added += 0
             else:
                 cls.objects.create(uuid=flow.uuid, name=flow.name, expires=flow.expires,
-                                   active_runs=flow.runs['active'], complete_runs=flow.runs['completed'],
-                                   interrupted_runs=flow.runs['interrupted'], expired_runs=flow.runs['expired'],
+                                   active_runs=flow.runs.active, complete_runs=flow.runs.completed,
+                                   interrupted_runs=flow.runs.interrupted, expired_runs=flow.runs.expired,
                                    created_on=flow.created_on)
                 added += 1
 
@@ -305,7 +305,7 @@ class Flow(models.Model):
     def flow_exists(cls, flow):
         return cls.objects.filter(uuid=flow.uuid).exists()
 
-    def __str__(self):
+    def __unicode__(self):
         return self.name
 
 
@@ -336,7 +336,7 @@ class Run(models.Model):
     def run_exists(cls, run):
         return cls.objects.filter(run_id=run.id).exists()
 
-    def __str__(self):
+    def __unicode__(self):
         return str(self.run_id)
 
 
