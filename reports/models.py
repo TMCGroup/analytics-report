@@ -61,11 +61,11 @@ class Group(models.Model):
 
 class Project(models.Model):
     name = models.CharField(max_length=200)
-    group = models.ForeignKey(Group)
+    group = models.ManyToManyField(Group, related_name='groups')
     lead = models.CharField(max_length=200)
     active = models.BooleanField(default=False)
-    created_at = models.DateTimeField(auto_now=False, auto_now_add=True)
-    modified_at = models.DateTimeField(auto_now=True, auto_now_add=False)
+    created_on = models.DateTimeField(auto_now=False, auto_now_add=True)
+    modified_on = models.DateTimeField(auto_now=True, auto_now_add=False)
 
     @classmethod
     def get_project_data(cls):
