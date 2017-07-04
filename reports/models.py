@@ -1,3 +1,5 @@
+import urllib2
+
 from django.db import models
 from django.conf import settings
 from temba_client.v2 import TembaClient
@@ -407,3 +409,26 @@ class Run(models.Model):
 #
 #     def __str__(self):
 #         return str(self.name)
+
+class Voice(models.Model):
+    vc_id = models.IntegerField()
+    project = models.ForeignKey(Project)
+    contact = models.CharField(max_length=100)
+    reason = models.TextField()
+    advice = models.TextField()
+    created_by = models.CharField(max_length=100)
+    created_at = models.DateTimeField()
+
+    @classmethod
+    def get_data(cls, proj):
+        url = "http://voice.tmcg.co.ug/~nicholas/data.php?project="+proj
+        req = urllib2.Request(url)
+        response = urllib2.urlopen(req)
+        data = response.read()
+        return data
+
+    @classmethod
+    def voice_id_exists(cls, vc_id):
+        return cls.objects.filter(vc_id=vc_id).exists()
+
+

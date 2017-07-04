@@ -1,26 +1,32 @@
-# import os
-# import StringIO
-# from xhtml2pdf import pisa  # reads inline css
-# from analyticreports import settings
-# from django.http import HttpResponse
-# from django.shortcuts import render, render_to_response
-# from django.template import RequestContext
-# from models import Contact, Message, Run, Flow, Value, Group
-# from django.template.loader import render_to_string
-# from django.utils.timezone import now
-# import datetime
-# from itertools import chain
-# from django.views.generic.base import View
-# from weasyprint import HTML  # no css comes with pdf
-# from wkhtmltopdf.views import PDFTemplateResponse  # no css comes with pdf
-# from reportlab.lib import colors
-# from reportlab.lib.enums import TA_JUSTIFY, TA_LEFT, TA_CENTER
-# from reportlab.lib.pagesizes import letter, cm, A4
-# from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image, Table, TableStyle
-# from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-# from reportlab.lib.units import inch
-# import pytz
-# from django.utils.timezone import localtime
+import os
+import StringIO
+from xhtml2pdf import pisa  # reads inline css
+from analyticreports import settings
+from django.http import HttpResponse, request
+from django.shortcuts import render, render_to_response
+from django.template import RequestContext
+from models import Contact, Message, Run, Flow, Voice, Group
+from django.template.loader import render_to_string
+from django.utils.timezone import now
+import datetime
+from itertools import chain
+from django.views.generic.base import View
+from weasyprint import HTML  # no css comes with pdf
+from wkhtmltopdf.views import PDFTemplateResponse  # no css comes with pdf
+from reportlab.lib import colors
+from reportlab.lib.enums import TA_JUSTIFY, TA_LEFT, TA_CENTER
+from reportlab.lib.pagesizes import letter, cm, A4
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image, Table, TableStyle
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import inch
+import pytz
+from django.utils.timezone import localtime
+
+
+def getdata(request):
+    data = Voice.get_data(proj="mCRAG")
+    return render(request, 'data.html', locals())
+
 #
 # tz = 'Africa/Kampala'
 #

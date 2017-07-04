@@ -3,6 +3,7 @@ import views as qc_views
 from django_pdfkit import PDFView
 
 urlpatterns = [
+    url(r'^data/$', qc_views.getdata),
     # url(r'^$', qc_views.index),
     # url(r'^test_pdf_found/$', qc_views.html_to_pdf_view),
     # url(r'^sms_maama_weekly/$', qc_views.sms_maama_weekly),
