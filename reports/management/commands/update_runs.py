@@ -1,15 +1,10 @@
-# from django.core.management import BaseCommand
-# from reports.models import Run, Contact, Flow
-#
-#
-# class Command(BaseCommand):
-#     def handle(self, *args, **options):
-#         added = 0
-#         flows = Flow.objects.filter(sync_flows=True).all()
-#         contacts = Contact.objects.all()
-#         for f in flows:
-#             for c in contacts:
-#                 added = Run.add_runs(flow=f, contact=c)
-#                 Flow.objects.filter(uuid=f.uuid).update(sync_flows=False)
-#
-#         self.stdout.write(self.style.SUCCESS('Successfully added %d runs' % added))
+from django.core.management import BaseCommand
+from reports.models import Run, Contact, Flow
+from temba_client.v2 import TembaClient
+
+class Command(BaseCommand):
+    def handle(self, *args, **options):
+        client = TembaClient('hiwa.tmcg.co.ug', '3aac2aba67a0cf83dc0ea49151a05088277eb4d6')
+        flows = Flow.add_flows(client=client)
+
+        self.stdout.write(self.style.SUCCESS('Successfully added %d flows' % flows))

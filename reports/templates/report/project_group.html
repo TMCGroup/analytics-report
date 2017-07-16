@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+{% for g in group_list %}
+{{ g.name }} &nbsp {%  for grp in g.group.all %}<ul><li>{{ grp }} &nbsp; {{ grp.count }}</ul>{% endfor %}
+
+{% endfor %}
+
+
+{{ project_list }}
+<br>
+<br>
+{{ c }}
+<br>
+<br>
+
+{#{% for contact in c %}#}
+{#{{ contact.name }}{{ contact.uuid }}#}
+{#{% endfor %}#}
+
+</body>
+</html>

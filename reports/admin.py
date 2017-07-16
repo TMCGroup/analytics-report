@@ -8,12 +8,12 @@ from .models import Contact, Group, Run, Flow, Message, RapidproKey, Project
 
 
 class RapidprokeyAdmin(admin.ModelAdmin):
-    list_display = ('workspace', 'host', 'key')
+    list_display = ('id', 'workspace', 'host', 'key')
     search_fields = ['workspace']
 
 
 class ProjectAdmin(admin.ModelAdmin):
-    list_display = ('name', 'show_groups', 'lead', 'active', 'created_on')
+    list_display = ('id', 'name', 'show_groups', 'lead', 'active', 'created_on')
     search_fields = ['name', 'group', 'lead']
 
     def show_groups(self, obj):
@@ -21,14 +21,14 @@ class ProjectAdmin(admin.ModelAdmin):
 
 
 class ContactAdmin(admin.ModelAdmin):
-    list_display = ('uuid', 'name', 'language', 'urns', 'groups', 'blocked', 'stopped',
+    list_display = ('id', 'uuid', 'name', 'language', 'urns', 'groups', 'blocked', 'stopped',
                     'created_on', 'modified_on')
     list_filter = ('created_on', 'modified_on')
     search_fields = ['name', 'urns', 'groups']
 
 
 class MessageAdmin(admin.ModelAdmin):
-    list_display = ('id', 'contact', 'urn', 'broadcast', 'channel', 'direction', 'type', 'status',
+    list_display = ('id', 'msg_id', 'contact', 'urn', 'broadcast', 'channel', 'direction', 'type', 'status',
                     'visibility', 'text', 'labels', 'created_on', 'sent_on', 'modified_on')
     list_filter = ('created_on', 'modified_on')
     search_fields = ['urn', 'text']
@@ -45,7 +45,7 @@ class GroupAdmin(admin.ModelAdmin):
 
 
 class RunAdmin(admin.ModelAdmin):
-    list_display = ('run_id', 'flow', 'contact', 'responded', 'exit_type', 'exited_on', 'created_on', 'modified_on')
+    list_display = ('id', 'run_id', 'flow', 'contact', 'responded', 'exit_type', 'exited_on', 'created_on', 'modified_on')
     search_fields = ['run_id', 'contact', 'flow']
 
 

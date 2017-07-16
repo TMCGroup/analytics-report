@@ -1,8 +1,12 @@
 from django.conf.urls import url, include
-import views as qc_views
-from django_pdfkit import PDFView
+from .views import *
+
 
 urlpatterns = [
+    url(r'^home/$', dashboard, name='dashboard'),
+    url(r'^project/$', project_groups_detail, name='project-groups'),
+    url(r'^report/verison/one/(?P<project_id>[\-\w]+)/$', report_template_one, name='template_one')
+
     # url(r'^$', qc_views.index),
     # url(r'^test_pdf_found/$', qc_views.html_to_pdf_view),
     # url(r'^sms_maama_weekly/$', qc_views.sms_maama_weekly),
