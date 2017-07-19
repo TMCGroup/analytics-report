@@ -1,31 +1,69 @@
 import os
-import StringIO
-from xhtml2pdf import pisa  # reads inline css
 from analyticreports import settings
-from django.http import HttpResponse, request
+from django.http import HttpResponse
 from django.shortcuts import render, render_to_response
 from django.template import RequestContext
-from models import Contact, Message, Run, Flow, Voice, Group
+from .models import Contact, Message, Run, Flow, Group, Project, Voice
 from django.template.loader import render_to_string
 from django.utils.timezone import now
 import datetime
 from itertools import chain
 from django.views.generic.base import View
-from weasyprint import HTML  # no css comes with pdf
-from wkhtmltopdf.views import PDFTemplateResponse  # no css comes with pdf
-from reportlab.lib import colors
-from reportlab.lib.enums import TA_JUSTIFY, TA_LEFT, TA_CENTER
-from reportlab.lib.pagesizes import letter, cm, A4
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image, Table, TableStyle
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.units import inch
-import pytz
-from django.utils.timezone import localtime
 
 
-def getdata(request):
-    data = Voice.get_data(proj="mCRAG")
-    return render(request, 'data.html', locals())
+def dashboard(request):
+    projects = Project.get_all_projects()
+    return render(request, 'report/dashboard.html', locals())
+
+
+def project_groups_detail(request):  # (request, name) include project name to make it be the the one selected when the
+    # based on clicked on project
+
+    mega_poc = Project.objects.get(name='mCRAG')
+    group = mega_poc.group.all()
+    group_list = Project.get_project_data(name='mCRAG')
+    project_list = Project.objects.filter(name='mCRAG').values_list('group__name', flat=True)
+    contacts = Contact.get_project_contacts(project_list=project_list)
+    c = Contact.objects.filter(uuid="3a8e1aee-15f5-41aa-9580-84bd68641e6d").values_list('groups')
+    return render(request, 'report/project_group.html', locals())
+
+
+def report_template_one(request, project_id):
+    project = Project.objects.get(id=project_id)
+    project_groups = project.group.all()
+    project_groups_count = project.group.count()
+    project_group_list = Project.get_project_data(name=project.name)
+
+    voice_platiform = Voice.objects.filter(project=project).all()
+
+    group_list = []
+    for project in project_groups:
+        group_list.append(project.name)
+    contacts = Contact.get_project_contacts(project_list=group_list)
+    weekly_contacts = Contact.get_weekly_project_contacts(project_list=group_list)
+    contact_counts = Contact.get_project_contacts_count(project_list=group_list)
+    weekly_contacts_value_list = Contact.get_all_project_contacts_value_list(project_list=group_list)
+
+    contact_urns_list = []
+    for contact in contacts:
+        contact_urns_list.append(contact.urns)
+    weekly_failed_messages = Message.get_weekly_failed_messages_daily(contact_list=contact_urns_list)
+
+    return render(request, 'report/template_one.html', locals())
+
+
+def getdatatest(request):
+    data = Voice.get_data(proj="mCrag")
+    lss = []
+    for d in data:
+        contact = d['phone_number']
+        lss.append(contact)
+    return render(request, 'report/data.html', locals())
+
+
+def getget(request):
+    cc = Contact.objects.filter(urns="+256757446110").first()
+    return render(request, 'report/test.html', locals())
 
 #
 # tz = 'Africa/Kampala'
