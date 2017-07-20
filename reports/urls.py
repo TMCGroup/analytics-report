@@ -5,7 +5,8 @@ from .views import *
 urlpatterns = [
     url(r'^home/$', dashboard, name='dashboard'),
     url(r'^project/$', project_groups_detail, name='project-groups'),
-    url(r'^report/verison/one/(?P<project_id>[\-\w]+)/$', report_template_one, name='template_one')
+    url(r'^report/verison/one/(?P<project_id>[\-\w]+)/$', report_template_one, name='template_one'),
+    url(r'^report/csv/(?P<project_id>[\-\w]+)/$', export_to_csv, name='csv')
 
     # url(r'^$', qc_views.index),
     # url(r'^test_pdf_found/$', qc_views.html_to_pdf_view),

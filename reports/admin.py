@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Contact, Group, Run, Flow, Message, RapidproKey, Project
+from .models import Contact, Group, Run, Flow, Message, RapidproKey, Project, CampaignEvent, Campaign
 
 
 # class EmailAdmin(admin.ModelAdmin):
@@ -67,5 +67,7 @@ admin.site.register(Group, GroupAdmin)
 # admin.site.register(Email, EmailAdmin)
 admin.site.register(Run, RunAdmin)
 admin.site.register(Flow, FlowAdmin)
+admin.site.register(Campaign)
+admin.site.register(CampaignEvent)
 # admin.site.register(Step, StepAdmin)
 # admin.site.register(Value, ValueAdmin)
