@@ -38,8 +38,11 @@
     <li>{{ contact.urns }}<br>{{ contact.name }}<br>{{ contact.groups }}</li>
     </ul>
 {% endfor %}
+
+<h3>Contact Value List </h3>
 {{ weekly_contacts_value_list }}
 <br><br>
+<h3>Contact urns Value List </h3>
 {{ contact_urns_list }}
 <br><br>
 <h3>{{ project_group.name }} Weekly Failed Messages</h3>
@@ -50,7 +53,18 @@
 {% endfor %}
 
 {{ weekly_failed_messages }}{{ weekly_failed_messages.count }}
-</body>
+  
+<br><br>
+<h3>{{ project_group.name }} Weekly Unread Messages</h3>
+{% for weekly_unread_message in weekly_unread_messages %}
+    <ul>
+    <li>{{ weekly_unread_message.urn }}<br>{{ weekly_unread_message.text }}<br>{{ weekly_unread_message.sent_on }}</li>
+    <li>{% for weekly_campaign_event in weekly_campaign_events %}
+        {% if weekly_campaign_event.message == weekly_unread_message.text  %}{{ weekly_campaign_event.campaign }} {% endif %}
+    {% endfor %}</li>
+    </ul>
+{% endfor %}
+
 {% endfor %}
 <h1>Weekly Voice</h1>
 <table>
@@ -67,4 +81,6 @@
     </tr>
 {% endfor %}
 </table>
+
+  </body>
 </html>

@@ -1,5 +1,6 @@
 from django.contrib import admin
-from .models import Contact, Group, Run, Flow, Message, RapidproKey, Project, Voice, Email
+from .models import Contact, Group, Run, Flow, Message, RapidproKey, Project, CampaignEvent, Campaign, Voice, Email
+
 
 
 class EmailAdmin(admin.ModelAdmin):
@@ -11,7 +12,7 @@ class EmailAdmin(admin.ModelAdmin):
 
 
 class RapidprokeyAdmin(admin.ModelAdmin):
-    list_display = ('workspace', 'host', 'key')
+    list_display = ('id', 'workspace', 'host', 'key')
     search_fields = ['workspace']
 
 
@@ -21,7 +22,7 @@ class VoiceAdmin(admin.ModelAdmin):
 
 
 class ProjectAdmin(admin.ModelAdmin):
-    list_display = ('name', 'show_groups', 'lead', 'active', 'created_on')
+    list_display = ('id', 'name', 'show_groups', 'lead', 'active', 'created_on')
     search_fields = ['name', 'group', 'lead']
 
     def show_groups(self, obj):
@@ -54,18 +55,8 @@ class GroupAdmin(admin.ModelAdmin):
 
 
 class RunAdmin(admin.ModelAdmin):
-    list_display = ('run_id', 'flow', 'contact', 'responded', 'exit_type', 'exited_on', 'created_on', 'modified_on')
+    list_display = ('id', 'run_id', 'flow', 'contact', 'responded', 'exit_type', 'exited_on', 'created_on', 'modified_on')
     search_fields = ['run_id', 'contact', 'flow']
-
-
-# class StepAdmin(admin.ModelAdmin):
-#     list_display = ('id', 'node', 'time', 'run_id')
-#     search_fields = ['node']
-#
-#
-# class ValueAdmin(admin.ModelAdmin):
-#     list_display = ('id', 'value', 'run_id')
-#     search_fields = ['value']
 
 
 admin.site.register(Project, ProjectAdmin)
@@ -77,5 +68,5 @@ admin.site.register(Group, GroupAdmin)
 admin.site.register(Email, EmailAdmin)
 admin.site.register(Run, RunAdmin)
 admin.site.register(Flow, FlowAdmin)
-# admin.site.register(Step, StepAdmin)
-# admin.site.register(Value, ValueAdmin)
+admin.site.register(Campaign)
+admin.site.register(CampaignEvent)

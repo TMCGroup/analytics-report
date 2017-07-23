@@ -9,7 +9,8 @@
 {% for project in projects %}
 <ul>
 <li>
-    <a href="{% url 'template_one' project.id %}">{{ project.name }}</a>
+    <a href="{% url 'template_one' project.id %}">{{ project.name }}</a> &nbsp; &nbsp; <a href="{% url 'csv' project.id %}">
+    {{ project.name }} &nbsp; csv</a>
 </li>
 </ul>
 

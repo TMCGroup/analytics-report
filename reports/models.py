@@ -1,9 +1,8 @@
+from __builtin__ import reduce
 import urllib2
 import hashlib
 import urllib
 import json
-import operator
-from django.db.models import Q
 from django.db import models
 from django.conf import settings
 from temba_client.v2 import TembaClient
@@ -11,6 +10,9 @@ from django.core.mail import EmailMessage
 import datetime
 from django.utils import timezone
 import pytz
+from django.urls import reverse
+import operator
+from django.db.models import Q
 
 tz = 'Africa/Kampala'
 
@@ -18,7 +20,7 @@ tz = 'Africa/Kampala'
 class RapidproKey(models.Model):
     workspace = models.CharField(max_length=200)
     host = models.CharField(max_length=200)
-    key = models.CharField(max_length=200)
+    key = models.CharField(max_length=255)
     created_at = models.DateTimeField(auto_now=False, auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True, auto_now_add=False)
 
@@ -30,6 +32,12 @@ class RapidproKey(models.Model):
             Group.add_groups(client=client)
             Contact.save_contacts(client=client)
             Flow.add_flows(client=client)
+            Campaign.add_campaigns(client=client)
+            CampaignEvent.add_campaign_events(client=client)
+
+    @classmethod
+    def get_workspaces(cls):
+        return cls.objects.all()
 
     def __unicode__(self):
         return str(self.workspace)
@@ -41,6 +49,9 @@ class Group(models.Model):
     count = models.IntegerField()
     created_at = models.DateTimeField(auto_now=False, auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True, auto_now_add=False)
+
+    class Meta:
+        ordering = ['name', ]
 
     @classmethod
     def add_groups(cls, client):
@@ -91,11 +102,11 @@ class Project(models.Model):
 
 class Contact(models.Model):
     uuid = models.CharField(max_length=200)
-    name = models.CharField(max_length=200, null=True, blank=True)
-    language = models.CharField(max_length=200, null=True)
+    name = models.CharField(max_length=255, null=True, blank=True)
+    language = models.CharField(max_length=255, null=True)
     urns = models.CharField(max_length=200)
     groups = models.TextField()
-    fields = models.CharField(max_length=200, null=True, blank=True)
+    fields = models.TextField(null=True, blank=True)
     blocked = models.BooleanField(default=False)
     stopped = models.BooleanField(default=False)
     created_on = models.DateTimeField(null=True)
@@ -106,14 +117,10 @@ class Contact(models.Model):
         added = 0
         for contact_batch in client.get_contacts().iterfetches(retry_on_rate_exceed=True):
             for contact in contact_batch:
+
                 grp = []
-                fld = []
                 for g in contact.groups:
                     grp.append(g.name)
-
-                for f in contact.fields:
-                    fld.append((f, contact.fields[f]))
-
                 if cls.contact_exists(contact):
                     con = cls.objects.get(uuid=contact.uuid)
                     for gp in con.groups:
@@ -122,32 +129,26 @@ class Contact(models.Model):
                         else:
                             grp.append(gp)
 
-                    for fd in con.fields:
-                        if fd in fld:
-                            fld.remove(fd)
-                        else:
-                            fld.append(fd)
-
                     ct = cls.objects.filter(uuid=contact.uuid).update(name=contact.name, language=contact.language,
                                                                       urns=cls.clean_contacts(contact), groups=grp,
-                                                                      fields=fld,
+                                                                      fields=contact.fields,
                                                                       blocked=contact.blocked, stopped=contact.stopped,
                                                                       created_on=contact.created_on,
                                                                       modified_on=contact.modified_on)
                     Message.save_messages(client, contact=ct)
                     Run.add_runs(client, contact=con)
+
                     grp[:] = []
-                    fld[:] = []
 
                 else:
+
                     ct = cls.objects.create(uuid=contact.uuid, name=contact.name, language=contact.language,
-                                            urns=cls.clean_contacts(contact), groups=grp, fields=fld,
+                                            urns=cls.clean_contacts(contact), groups=grp, fields=contact.fields,
                                             blocked=contact.blocked, stopped=contact.stopped,
                                             created_on=contact.created_on, modified_on=contact.modified_on)
                     Message.save_messages(client, contact=ct)
                     Run.add_runs(client, contact=ct)
                     grp[:] = []
-                    fld[:] = []
 
                     added += 1
 
@@ -156,10 +157,14 @@ class Contact(models.Model):
     @classmethod
     def contact_exists(cls, contact):
         return cls.objects.filter(uuid=contact.uuid).exists()
-
+      
     @classmethod
     def urns_exists(cls, number):
         return cls.objects.filter(urns=number).exists()
+
+    @classmethod
+    def get_all_contacts(cls):
+        return cls.objects.all()
 
     @classmethod
     def get_project_contacts(cls, project_list):
@@ -219,7 +224,7 @@ class Message(models.Model):
     def save_messages(cls, client, contact):
         added = 0
 
-        for message_batch in client.get_messages(contact=contact.uuid).iterfetches(retry_on_rate_exceed=True):
+        for message_batch in client.get_messages(contact=contact).iterfetches(retry_on_rate_exceed=True):
             for message in message_batch:
                 if not cls.message_exists(message):
                     cls.objects.create(msg_id=message.id, broadcast=message.broadcast, contact=contact,
@@ -229,6 +234,8 @@ class Message(models.Model):
                                        text=message.text, labels=message.labels, created_on=message.created_on,
                                        sent_on=message.sent_on, modified_on=message.modified_on)
                     added += 1
+
+                    #  No need to update messages, they do not have any field that will be modified.
                 else:
                     pass
 
@@ -239,49 +246,44 @@ class Message(models.Model):
         return cls.objects.filter(msg_id=message.id).exists()
 
     @classmethod
-    def get_sent_messages(cls):
+    def get_weekly_sent_messages(cls, contacts_list):
+        query = reduce(operator.or_, (Q(urn__contains=contact) for contact in contacts_list))
         date_diff = datetime.datetime.now() - datetime.timedelta(days=7)
-        return cls.objects.filter(direction='out', sent_on__range=(date_diff, datetime.datetime.now())).all()
+        return cls.objects.filter(query, direction='out', sent_on__range=(date_diff, datetime.datetime.now())).all()
 
     @classmethod
-    def get_delivered_messages(cls):
+    def get_weekly_delivered_messages(cls, contacts_list):
+        query = reduce(operator.or_, (Q(urn__contains=contact) for contact in contacts_list))
         date_diff = datetime.datetime.now() - datetime.timedelta(days=7)
-        return cls.objects.filter(direction='out', status='delivered',
+        return cls.objects.filter(query, direction='out', status='delivered',
                                   sent_on__range=(date_diff, datetime.datetime.now())).all()
 
     @classmethod
-    def get_failed_messages(cls):
-        date_diff = datetime.datetime.now() - datetime.timedelta(days=7)
-        return cls.objects.filter(direction='out', sent_on__range=(date_diff, datetime.datetime.now())).all() \
-            .exclude(status='delivered').all()
-
-    @classmethod
-    def sent_messages_count(cls):
-        date_diff = datetime.datetime.now() - datetime.timedelta(days=7)
-        return cls.objects.filter(direction='out', sent_on__range=(date_diff, datetime.datetime.now())).count()
-
-    @classmethod
-    def count_read_messages(cls):
-        date_diff = datetime.datetime.now() - datetime.timedelta(days=7)
-        return cls.objects.filter(status='delivered', direction='out',
-                                  sent_on__range=(date_diff, datetime.datetime.now())).count()
-
-    @classmethod
-    def count_unread_messages(cls):
-        date_diff = datetime.datetime.now() - datetime.timedelta(days=7)
-        return cls.objects.filter(direction='out', sent_on__range=(date_diff, datetime.datetime.now())) \
-            .exclude(status='delivered').count()
-
-    @classmethod
-    def get_unread_messages(cls):
-        date_diff = datetime.datetime.now() - datetime.timedelta(days=7)
-        return cls.objects.filter(direction='out', status='errored',
+    def get_weekly_failed_messages(cls, contacts_list):
+        query = reduce(operator.or_, (Q(urn__contains=contact) for contact in contacts_list))
+        date_diff = datetime.datetime.now() - datetime.timedelta(days=21)  ## this is for testing
+        return cls.objects.filter(query, status='failed', direction='out',
                                   sent_on__range=(date_diff, datetime.datetime.now())).all()
 
     @classmethod
-    def get_failed_messages_daily(cls):
-        date_diff = datetime.datetime.now() - datetime.timedelta(days=7)
-        return cls.objects.filter(direction='out', status='sent',
+    def get_weekly_hanging_messages(cls, contacts_list):
+        query = reduce(operator.or_, (Q(urn__contains=contact) for contact in contacts_list))
+        date_diff = datetime.datetime.now() - datetime.timedelta(days=21)  ## this is for testing
+        return cls.objects.filter(query, direction='out', sent_on__range=(date_diff, datetime.datetime.now())) \
+            .exclude(status__in=["sent", "delivered", "handled", "errored", "failed", "resent"]).all()
+
+    @classmethod
+    def get_monthly_failed_messages(cls, contacts_list):
+        query = reduce(operator.or_, (Q(urn__contains=contact) for contact in contacts_list))
+        date_diff = datetime.datetime.now() - datetime.timedelta(days=30)
+        return cls.objects.filter(query, sent_on__range=(date_diff, datetime.datetime.now())).exclude(
+            status='delivered').all()
+
+    @classmethod
+    def get_weekly_unread_messages(cls, contacts_list):
+        query = reduce(operator.or_, (Q(urn__contains=contact) for contact in contacts_list))
+        date_diff = datetime.datetime.now() - datetime.timedelta(days=21)
+        return cls.objects.filter(query, direction='out', status='errored',
                                   sent_on__range=(date_diff, datetime.datetime.now())).all()
 
     @classmethod
@@ -352,6 +354,89 @@ class Flow(models.Model):
         return self.name
 
 
+class Campaign(models.Model):
+    uuid = models.CharField(max_length=100)
+    name = models.CharField(max_length=100)
+    group = models.CharField(max_length=200, blank=True, null=True)
+    created_on = models.DateTimeField()
+
+    @classmethod
+    def add_campaigns(cls, client):
+        added = 0
+        for campaign_batch in client.get_campaigns().iterfetches(retry_on_rate_exceed=True):
+            for campaign in campaign_batch:
+                if not cls.campaign_exists(campaign):
+                    cls.objects.create(uuid=campaign.uuid, name=campaign.name,
+                                       group=campaign.group, created_on=campaign.created_on)
+
+                    added += 1
+                else:
+                    cls.objects.filter(uuid=campaign.uuid).update(name=campaign.name,
+                                                                  group=campaign.group,
+                                                                  created_on=campaign.created_on)
+        return added
+
+    @classmethod
+    def campaign_exists(cls, campaign):
+        return cls.objects.filter(uuid=campaign.uuid).exists()
+
+    def __unicode__(self):
+        return self.name
+
+
+class CampaignEvent(models.Model):
+    uuid = models.CharField(max_length=36)
+    campaign = models.CharField(max_length=200)
+    relative_to = models.CharField(max_length=100)
+    offset = models.IntegerField()
+    unit = models.CharField(max_length=7)
+    delivery_hour = models.IntegerField()
+    message = models.TextField(blank=True, null=True)
+    flow = models.CharField(max_length=200, blank=True, null=True)
+    created_on = models.DateTimeField()
+
+    @classmethod
+    def add_campaign_events(cls, client):
+        added = 0
+        for campaign_events_batch in client.get_campaign_events().iterfetches(retry_on_rate_exceed=True):
+            for campaign_event in campaign_events_batch:
+                if not cls.campaign_event_exists(campaign_event):
+                    cls.objects.create(uuid=campaign_event.uuid,
+                                       # campaign=campaign_event.campaign.uuid,
+                                       campaign={'uuid': campaign_event.campaign.uuid,
+                                                 'name': campaign_event.campaign.name},
+                                       relative_to=campaign_event.relative_to, offset=campaign_event.offset,
+                                       unit=campaign_event.unit, delivery_hour=campaign_event.delivery_hour,
+                                       message=campaign_event.message, flow=campaign_event.flow,
+                                       created_on=campaign_event.created_on)
+                    added += 1
+                else:
+                    cls.objects.filter(uuid=campaign_event.uuid, campaign_event_id=campaign_event.id).update(
+                        relative_to=campaign_event.relative_to, offset=campaign_event.offset,
+                        unit=campaign_event.unit, delivery_hour=campaign_event.delivery_hour,
+                        message=campaign_event.message, flow={'uuid': campaign_event.flow.uuid,
+                                                              'name': campaign_event.flow.name},
+                        created_on=campaign_event.created_on)
+                    added += 1
+        return added
+
+    @classmethod
+    def campaign_event_exists(cls, campaign_event):
+        return cls.objects.filter(uuid=campaign_event.uuid).exists()
+
+    # @classmethod testing out
+    # def get_campaign_event(cls, message):
+    #     return cls.objects.filter(message__iexact=message.text).all()
+
+    @classmethod
+    def get_campaign_event(cls):
+        date_diff = datetime.datetime.now() - datetime.timedelta(days=21)
+        return cls.objects.filter(created_on__range=(date_diff, datetime.datetime.now())).all()
+
+    def __str__(self):
+        return self.uuid
+
+
 class Run(models.Model):
     run_id = models.IntegerField()
     flow = models.CharField(max_length=200)
@@ -365,7 +450,7 @@ class Run(models.Model):
     @classmethod
     def add_runs(cls, client, contact):
         added = 0
-        for run_batch in client.get_runs(contact=contact.uuid).iterfetches(retry_on_rate_exceed=True):
+        for run_batch in client.get_runs(contact=contact).iterfetches(retry_on_rate_exceed=True):
             for run in run_batch:
                 if not cls.run_exists(run):
                     r = cls.objects.create(run_id=run.id, flow=run.flow, contact=contact, responded=run.responded,
@@ -382,75 +467,50 @@ class Run(models.Model):
     def __unicode__(self):
         return str(self.run_id)
 
+      
+class Value(models.Model):
+    value = models.CharField(max_length=100, blank=True)
+    run = models.ForeignKey(Run, on_delete=models.CASCADE)
 
-# class Step(models.Model):
-#     node = models.CharField(max_length=100)
-#     time = models.DateTimeField()
-#     run = models.ForeignKey(Run, on_delete=models.CASCADE)
-#
-#     @classmethod
-#     def add_steps(cls, run, steps):
-#         added = 0
-#         for step in steps:
-#             if not cls.step_exists(step):
-#                 cls.objects.create(node=step.node, time=step.time, run=run)
-#                 added += 1
-#         return added
-#
-#     @classmethod
-#     def step_exists(cls, step):
-#         return cls.objects.filter(node=step.node).exists()
-#
-#     def _str__(self):
-#         return str(self.node)
-#
-#
-# class Value(models.Model):
-#     value = models.CharField(max_length=100, blank=True)
-#     run = models.ForeignKey(Run, on_delete=models.CASCADE)
-#
-#     @classmethod
-#     def add_values(cls, run, values):
-#         added = 0
-#         for val in values:
-#             if not cls.value_exists(run=run):
-#                 cls.objects.create(value=val, run=run)
-#                 added += 1
-#         return added
-#
-#     @classmethod
-#     def value_exists(cls, run):
-#         return cls.objects.filter(run=run).exists()
-#
-#     def __str__(self):
-#         return str(self.value)
+    @classmethod
+    def add_values(cls, run, values):
+        added = 0
+        for val in values:
+            if not cls.value_exists(run=run):
+                cls.objects.create(value=val, run=run)
+                added += 1
+        return added
+
+    @classmethod
+    def value_exists(cls, run):
+        return cls.objects.filter(run=run).exists()
+
+    def __str__(self):
+        return str(self.value)
 
 
 class Email(models.Model):
     name = models.CharField(max_length=100)
-    address = models.EmailField(max_length=200)
-    project = models.ManyToManyField(Project)
+    email_address = models.EmailField(max_length=200)
+    project = models.ForeignKey(Project)
 
-    #     @classmethod
-    #     def add_email(cls, name, address):
-    #         return cls.objects.create(name=name, address=address)
-    #
-    #     @classmethod
-    #     def send_message_email(cls, file_name):
-    #         mailing_list = []
-    #         emails = cls.objects.all()
-    #         for email in emails:
-    #             mailing_list.append(email.address)
-    #
-    #         email_html_file = '<h4>Please see attached pdf report file</h4>'
-    #         msg = EmailMessage('mCRAG weekly report', email_html_file, settings.EMAIL_HOST_USER, mailing_list)
-    #         msg.attach_file(file_name)
-    #         msg.content_subtype = "html"
-    #         return msg.send()
-    #
-    def __unicode__(self):
+    @classmethod
+    def email_report(cls, pdf_file, csv_file, project_id):
+        mailing_list = []
+        email_addresses = cls.objects.filter(project__id=project_id).all()
+        for email_address in email_addresses:
+            mailing_list.append(email_address.email_address)
+
+        email_body = '<h4>Please find attached the weekly report.</h4>'
+        email_message = EmailMessage('mCRAG weekly report', email_body, settings.EMAIL_HOST_USER, mailing_list)
+        email_message.attach_file(pdf_file)
+        email_message.attach_file(csv_file)
+        email_message.content_subtype = "html"
+        return email_message.send()
+
+    def __str__(self):
         return str(self.name)
-
+      
 
 class Voice(models.Model):
     id = models.IntegerField(primary_key=True)
