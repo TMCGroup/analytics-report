@@ -53,7 +53,7 @@
 {% endfor %}
 
 {{ weekly_failed_messages }}{{ weekly_failed_messages.count }}
-
+  
 <br><br>
 <h3>{{ project_group.name }} Weekly Unread Messages</h3>
 {% for weekly_unread_message in weekly_unread_messages %}
@@ -65,7 +65,22 @@
     </ul>
 {% endfor %}
 
-{{ weekly_failed_messages }}{{ weekly_failed_messages.count }}
-</body>
 {% endfor %}
+<h1>Weekly Voice</h1>
+<table>
+<tr>
+<th>Contact</th>
+<th>Reason for call</th>
+<th>Created by</th>
+</tr>
+{% for c in voice_platiform %}
+    <tr>
+    <td>{{ c.contact }}</td>
+    <td>{{ c.reason }}</td>
+    <td>{{ c.created_by }}</td>
+    </tr>
+{% endfor %}
+</table>
+
+  </body>
 </html>

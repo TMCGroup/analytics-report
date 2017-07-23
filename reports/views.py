@@ -4,12 +4,13 @@ from analyticreports import settings
 from django.http import HttpResponse
 from django.shortcuts import render
 from django.template import RequestContext
-from .models import Contact, Message, Run, Flow, Group, Project, CampaignEvent, Campaign
+from .models import Contact, Message, Run, Flow, Group, Project, CampaignEvent, Campaign, Project, Voice
 from django.template.loader import render_to_string
 from django.utils.timezone import now
 from itertools import chain
 from django.views.generic.base import View
 import csv
+import datetime
 
 
 def dashboard(request):
@@ -34,10 +35,12 @@ def report_template_one(request, project_id):
     project_groups = project.group.all()
     project_groups_count = project.group.count()
     project_group_list = Project.get_project_data(name=project.name)
-
+    voice_platiform = Voice.objects.filter(project=project).all()
+    
     group_list = []
     for project in project_groups:
         group_list.append(project.name)
+        
     contacts = Contact.get_project_contacts(project_list=group_list)
     weekly_contacts = Contact.get_weekly_enrolled_project_contacts(project_list=group_list)
     contact_counts = Contact.get_project_contacts_count(project_list=group_list)
@@ -67,7 +70,16 @@ def export_to_csv(request, project_id):
 
     return response
 
+def getdatatest(request):
+    data = Voice.get_data(proj="mCrag")
+    lss = []
+    for d in data:
+        contact = d['phone_number']
+        lss.append(contact)
+    return render(request, 'report/data.html', locals())
 
 
-
+def getget(request):
+    cc = Contact.objects.filter(urns="+256757446110").first()
+    return render(request, 'report/test.html', locals())
 
