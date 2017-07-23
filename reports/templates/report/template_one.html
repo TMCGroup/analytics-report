@@ -13,31 +13,32 @@
     No project groups added yet
 
     {% else %}
-    {%  for group in project_groups %}<ul><li>{{ group.name }} &nbsp; {{ group.count }}</ul>{% endfor %}
+    <table>
+    <tr><th>Group Name</th><th>Number of contacts</th></tr>
+    {%  for group in project_groups %}<tr><td>{{ group.name }}</td><td>{{ group.count }}</td></tr>{% endfor %}
 {% endif %}
+    </table>
 
 
-
-<br>
-<br>
-{{ group_list }}
-<br>
-<br>
 <h3>{{ project_group.name }} Contacts</h3>
+    <table>
+    <tr><th>NAME</th><th>Number</th><th>Groups</th></tr>
 {% for contact in contacts %}
-    <ul>
-    <li>{{ contact.urns }}<br>{{ contact.name }}<br>{{ contact.groups }}</li>
-    </ul>
-{% endfor %}
 
-{{ contacts }} {{ contact_counts }}
+    <tr><td>{{ contact.urns }}</td><td>{{ contact.name }}</td><td>{{ contact.groups }}</td></tr>
+
+{% endfor %}
+    </table>
+<h3> Total Number of Contacts {{ contact_counts }}</h3>
+{#{{ contacts }} #}
 <br><br>
 <h3>{{ project_group.name }} Weekly Contacts</h3>
+    <table>
+    <tr><th>Name</th><th>Number</th><th>Groups</th></tr>
 {% for contact in weekly_contacts %}
-    <ul>
-    <li>{{ contact.urns }}<br>{{ contact.name }}<br>{{ contact.groups }}</li>
-    </ul>
+    <tr><td>{{ contact.name }}</td><td>{{ contact.urns }}</td><td>{{ contact.groups }}</td></tr>
 {% endfor %}
+    </table>
 
 <h3>Contact Value List </h3>
 {{ weekly_contacts_value_list }}
