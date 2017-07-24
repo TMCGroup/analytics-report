@@ -29,11 +29,11 @@ class RapidproKey(models.Model):
 
     @classmethod
     def get_rapidpro_groups(cls):
-        keys = cls.objects.all()
+        keys = cls.objects.filter(key='1da6d399139139812e2f949a64ce80264184996f').all()
         for rkey in keys:
             client = TembaClient(rkey.host, rkey.key)
-            # Group.add_groups(client=client)
-            # Contact.save_contacts(client=client)
+            Group.add_groups(client=client)
+            Contact.save_contacts(client=client)
             Flow.add_flows(client=client)
             Campaign.add_campaigns(client=client)
             CampaignEvent.add_campaign_events(client=client)
@@ -43,7 +43,7 @@ class RapidproKey(models.Model):
         return cls.objects.all()
 
     def __unicode__(self):
-        return str(self.workspace)
+        return self.workspace
 
 
 class Group(models.Model):
@@ -80,7 +80,7 @@ class Group(models.Model):
         return cls.objects.all()
 
     def __unicode__(self):
-        return str(self.name)
+        return self.name
 
 
 class Project(models.Model):
@@ -100,7 +100,7 @@ class Project(models.Model):
         return cls.objects.filter(active=True).all()
 
     def __unicode__(self):
-        return str(self.name)
+        return self.name
 
 
 class Contact(models.Model):
@@ -132,25 +132,25 @@ class Contact(models.Model):
                         else:
                             grp.append(gp)
 
-                    ct = cls.objects.filter(uuid=contact.uuid).update(name=contact.name, language=contact.language,
+                    contact_instance = cls.objects.filter(uuid=contact.uuid).update(name=contact.name, language=contact.language,
                                                                       urns=cls.clean_contacts(contact), groups=grp,
                                                                       fields=contact.fields,
                                                                       blocked=contact.blocked, stopped=contact.stopped,
                                                                       created_on=contact.created_on,
                                                                       modified_on=contact.modified_on)
-                    Message.save_messages(client, contact=ct)
-                    Run.add_runs(client, contact=con)
+                    Message.save_messages(client, contact=contact_instance)
+                    Run.add_runs(client, contact=contact_instance)
 
                     grp[:] = []
 
                 else:
 
-                    ct = cls.objects.create(uuid=contact.uuid, name=contact.name, language=contact.language,
+                    contact_instance = cls.objects.create(uuid=contact.uuid, name=contact.name, language=contact.language,
                                             urns=cls.clean_contacts(contact), groups=grp, fields=contact.fields,
                                             blocked=contact.blocked, stopped=contact.stopped,
                                             created_on=contact.created_on, modified_on=contact.modified_on)
-                    Message.save_messages(client, contact=ct)
-                    Run.add_runs(client, contact=ct)
+                    Message.save_messages(client, contact=contact_instance)
+                    Run.add_runs(client, contact=contact_instance)
                     grp[:] = []
 
                     added += 1
@@ -160,7 +160,7 @@ class Contact(models.Model):
     @classmethod
     def contact_exists(cls, contact):
         return cls.objects.filter(uuid=contact.uuid).exists()
-      
+
     @classmethod
     def urns_exists(cls, number):
         return cls.objects.filter(urns=number).exists()
@@ -204,7 +204,7 @@ class Contact(models.Model):
                 return contact.urns
 
     def __unicode__(self):
-        return str(self.urns)
+        return self.urns
 
 
 class Message(models.Model):
@@ -223,6 +223,9 @@ class Message(models.Model):
     sent_on = models.DateTimeField(null=True, blank=True)
     modified_on = models.DateTimeField(null=True, blank=True)
 
+    class Meta:
+        ordering = ['-created_on', ]
+
     @classmethod
     def save_messages(cls, client, contact):
         added = 0
@@ -237,10 +240,7 @@ class Message(models.Model):
                                        text=message.text, labels=message.labels, created_on=message.created_on,
                                        sent_on=message.sent_on, modified_on=message.modified_on)
                     added += 1
-
                     #  No need to update messages, they do not have any field that will be modified.
-                else:
-                    pass
 
         return added
 
@@ -251,27 +251,27 @@ class Message(models.Model):
     @classmethod
     def get_weekly_sent_messages(cls, contacts_list):
         query = reduce(operator.or_, (Q(urn__contains=contact) for contact in contacts_list))
-        date_diff = datetime.datetime.now() - datetime.timedelta(days=21)
+        date_diff = datetime.datetime.now() - datetime.timedelta(days=30)
         return cls.objects.filter(query, direction='out', sent_on__range=(date_diff, datetime.datetime.now())).all()
 
     @classmethod
     def get_weekly_delivered_messages(cls, contacts_list):
         query = reduce(operator.or_, (Q(urn__contains=contact) for contact in contacts_list))
-        date_diff = datetime.datetime.now() - datetime.timedelta(days=21)
+        date_diff = datetime.datetime.now() - datetime.timedelta(days=30)
         return cls.objects.filter(query, direction='out', status='delivered',
                                   sent_on__range=(date_diff, datetime.datetime.now())).all()
 
     @classmethod
     def get_weekly_failed_messages(cls, contacts_list):
         query = reduce(operator.or_, (Q(urn__contains=contact) for contact in contacts_list))
-        date_diff = datetime.datetime.now() - datetime.timedelta(days=21)  ## this is for testing
+        date_diff = datetime.datetime.now() - datetime.timedelta(days=30)  ## this is for testing
         return cls.objects.filter(query, status='failed', direction='out',
                                   sent_on__range=(date_diff, datetime.datetime.now())).all()
 
     @classmethod
     def get_weekly_hanging_messages(cls, contacts_list):
         query = reduce(operator.or_, (Q(urn__contains=contact) for contact in contacts_list))
-        date_diff = datetime.datetime.now() - datetime.timedelta(days=21)  ## this is for testing
+        date_diff = datetime.datetime.now() - datetime.timedelta(days=30)  ## this is for testing
         return cls.objects.filter(query, direction='out', sent_on__range=(date_diff, datetime.datetime.now())) \
             .exclude(status__in=["delivered", "handled", "errored", "failed", "resent"]).all()
 
@@ -285,7 +285,7 @@ class Message(models.Model):
     @classmethod
     def get_weekly_unread_messages(cls, contacts_list):
         query = reduce(operator.or_, (Q(urn__contains=contact) for contact in contacts_list))
-        date_diff = datetime.datetime.now() - datetime.timedelta(days=21)
+        date_diff = datetime.datetime.now() - datetime.timedelta(days=30)
         return cls.objects.filter(query, direction='out', status='errored',
                                   sent_on__range=(date_diff, datetime.datetime.now())).all()
 
@@ -298,7 +298,8 @@ class Message(models.Model):
         return cls.objects.filter(direction='out', status='failed',
                                   sent_on__range=(date_diff, datetime.datetime.now())).all() \
  \
-    # @classmethod
+            # @classmethod
+
     # def get_weekly_failed_messages_daily(cls, contact_list):
     #     # query = reduce(operator.or_, (Q(contact__groups__contains=item) for item in project_list))
     #     # query_2 = reduce(operator.or_, (Q(contact__in=item) for item in contact_qs))
@@ -399,7 +400,7 @@ class CampaignEvent(models.Model):
     created_on = models.DateTimeField()
 
     class Meta:
-        ordering = ['-created_on',]
+        ordering = ['-created_on', ]
 
     @classmethod
     def add_campaign_events(cls, client):
@@ -417,11 +418,10 @@ class CampaignEvent(models.Model):
                                        created_on=campaign_event.created_on)
                     added += 1
                 else:
-                    cls.objects.filter(uuid=campaign_event.uuid, campaign_event_id=campaign_event.id).update(
+                    cls.objects.filter(uuid=campaign_event.uuid).update(
                         relative_to=campaign_event.relative_to, offset=campaign_event.offset,
                         unit=campaign_event.unit, delivery_hour=campaign_event.delivery_hour,
-                        message=campaign_event.message, flow={'uuid': campaign_event.flow.uuid,
-                                                              'name': campaign_event.flow.name},
+                        message=campaign_event.message, flow=campaign_event.flow,
                         created_on=campaign_event.created_on)
                     added += 1
         return added
@@ -438,7 +438,7 @@ class CampaignEvent(models.Model):
     def get_campaign_event(cls):
         return cls.objects.all()
 
-    def __str__(self):
+    def __unicode__(self):
         return self.uuid
 
 
@@ -458,9 +458,10 @@ class Run(models.Model):
         for run_batch in client.get_runs(contact=contact).iterfetches(retry_on_rate_exceed=True):
             for run in run_batch:
                 if not cls.run_exists(run):
-                    run_instance = cls.objects.create(run_id=run.id, flow=run.flow, contact=contact, responded=run.responded,
-                                           exit_type=run.exit_type, exited_on=run.exited_on,
-                                           created_on=run.created_on, modified_on=run.modified_on)
+                    run_instance = cls.objects.create(run_id=run.id, flow=run.flow, contact=contact,
+                                                      responded=run.responded,
+                                                      exit_type=run.exit_type, exited_on=run.exited_on,
+                                                      created_on=run.created_on, modified_on=run.modified_on)
                     added += 1
                     Value.add_values(run=run_instance, values=run_instance.values)
 
@@ -471,9 +472,9 @@ class Run(models.Model):
         return cls.objects.filter(run_id=run.id).exists()
 
     def __unicode__(self):
-        return str(self.run_id)
+        return self.run_id
 
-      
+
 class Value(models.Model):
     value = models.CharField(max_length=100, blank=True)
     run = models.ForeignKey(Run, on_delete=models.CASCADE)
@@ -491,17 +492,21 @@ class Value(models.Model):
     def value_exists(cls, run):
         return cls.objects.filter(run=run).exists()
 
-    def __str__(self):
-        return str(self.value)
+    def __unicode__(self):
+        return self.value
 
 
 class Email(models.Model):
     name = models.CharField(max_length=100)
     email_address = models.EmailField(max_length=200)
-    project = models.ManyToManyField(Project)
+    project = models.ForeignKey(Project, related_name='projects', blank=True, null=True)
 
     @classmethod
-    def email_report(cls, pdf_file, csv_file, project_id):
+    def add_email(cls, name, email_address, project):
+        return cls.objects.create(name=name, email_address=email_address, project=project)
+
+    @classmethod
+    def email_report(cls, csv_file, project_id):
         project = Project.objects.get(id=project_id)
         mailing_list = []
         email_addresses = cls.objects.filter(project__in=[project]).all()
@@ -510,16 +515,16 @@ class Email(models.Model):
 
         report_datetime = datetime.datetime.now()
 
-        email_subject = '%s Weekly ( %s ) Report' % project.name % report_datetime
+        email_subject = '%s Weekly ( %s ) Report' % (project.name, report_datetime)
         email_body = '<h4>Please find attached the weekly report.</h4>'
         email_message = EmailMessage(email_subject, email_body, settings.EMAIL_HOST_USER, mailing_list)
-        email_message.attach_file(pdf_file)
-        email_message.attach_file(csv_file)
+        # email_message.attach_file(pdf_file)
+        email_message.attach_file(csv_file, 'text/csv')
         email_message.content_subtype = "html"
         return email_message.send()
 
-    def __str__(self):
-        return str(self.name)
+    def __unicode__(self):
+        return self.name
 
 
 class Voice(models.Model):

@@ -137,21 +137,21 @@
 <h4>Number of weekly unread messages: {{ weekly_unread_messages.count }}</h4>
 
 {% endfor %}
-<h1>Weekly Voice</h1>
-<table>
-<tr>
-<th>Contact</th>
-<th>Reason for call</th>
-<th>Created by</th>
-</tr>
-{% for c in voice_platiform %}
-    <tr>
-    <td>{{ c.contact }}</td>
-    <td>{{ c.reason }}</td>
-    <td>{{ c.created_by }}</td>
-    </tr>
-{% endfor %}
-</table>
+{#<h1>Weekly Voice</h1>#}
+{#<table>#}
+{#<tr>#}
+{#<th>Contact</th>#}
+{#<th>Reason for call</th>#}
+{#<th>Created by</th>#}
+{#</tr>#}
+{#{% for c in voice_platiform %}#}
+{#    <tr>#}
+{#    <td>{{ c.contact }}</td>#}
+{#    <td>{{ c.reason }}</td>#}
+{#    <td>{{ c.created_by }}</td>#}
+{#    </tr>#}
+{#{% endfor %}#}
+{#</table>#}
 
   </body>
 </html>

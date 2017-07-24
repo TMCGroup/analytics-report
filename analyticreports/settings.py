@@ -122,3 +122,13 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
 HOST = 'hiwa.tmcg.co.ug'
 KEY = '3aac2aba67a0cf83dc0ea49151a05088277eb4d6'
+
+#  For Gmail or Google Apps
+EMAIL_USE_TLS = True
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_HOST_USER = 'faithnassiwa@gmail.com'
+EMAIL_HOST_PASSWORD = 'nmcwlqkukvdnyfho'  # app specfic password generated from
+# support.google.com/accounts/answer/185833
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+DEFAULT_FROM_EMAIL = 'Preferably use TMCGs info Email <faithnassiwa@gmail.com>'

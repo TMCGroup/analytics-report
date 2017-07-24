@@ -4,11 +4,11 @@ from .models import Contact, Group, Run, Flow, Message, RapidproKey, Project, Ca
 
 
 class EmailAdmin(admin.ModelAdmin):
-    list_display = ('name', 'address', 'show_projects')
-    search_fields = ['name', 'show_projects']
+    list_display = ('name', 'email_address', 'project')
+    search_fields = ['name', 'projects']
 
-    def show_projects(self, obj):
-        return "\n".join([a.name for a in obj.project.all()])
+    # def show_projects(self, obj):
+    #     return "\n".join([a.name for a in obj.project.all()])
 
 
 class RapidprokeyAdmin(admin.ModelAdmin):

@@ -10,7 +10,8 @@
 <ul>
 <li>
     <a href="{% url 'template_one' project.id %}">{{ project.name }}</a> &nbsp; &nbsp; <a href="{% url 'csv' project.id %}">
-    {{ project.name }} &nbsp; csv</a>
+    {{ project.name }} &nbsp;Download CSV</a>&nbsp; <a href="{% url 'email-csv' project.id %}">
+    {{ project.name }} &nbsp; Email CSV</a>
 </li>
 </ul>
 
