@@ -118,6 +118,7 @@
 {% endif %}
 <h4>Number of weekly unread messages: {{ weekly_hanging_messages.count }}</h4>
 
+
 <br><br>
 <h3>{{ project_group.name }} Weekly Unread Messages</h3>
 {% if weekly_unread_messages.count > 0 %}
@@ -135,8 +136,22 @@
 {% endif %}
 <h4>Number of weekly unread messages: {{ weekly_unread_messages.count }}</h4>
 
-
-
-</body>
 {% endfor %}
+<h1>Weekly Voice</h1>
+<table>
+<tr>
+<th>Contact</th>
+<th>Reason for call</th>
+<th>Created by</th>
+</tr>
+{% for c in voice_platiform %}
+    <tr>
+    <td>{{ c.contact }}</td>
+    <td>{{ c.reason }}</td>
+    <td>{{ c.created_by }}</td>
+    </tr>
+{% endfor %}
+</table>
+
+  </body>
 </html>
