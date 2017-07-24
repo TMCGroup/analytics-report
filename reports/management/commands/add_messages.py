@@ -5,9 +5,9 @@ from temba_client.v2 import TembaClient
 
 class Command(BaseCommand):
     def handle(self, *args, **options):
-        added = 0
-        keys = RapidproKey.get_workspaces()
-        contacts = Contact.get_all_contacts()
+        # added = 0
+        # keys = RapidproKey.get_workspaces()
+        contacts = Contact.objects.all()
         # for key in keys:
         #     client = TembaClient(key.host, key.key)
         client = TembaClient('hiwa.tmcg.co.ug', '3aac2aba67a0cf83dc0ea49151a05088277eb4d6')

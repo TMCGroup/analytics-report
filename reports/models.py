@@ -1,4 +1,8 @@
 from __builtin__ import reduce
+import urllib2
+import hashlib
+import urllib
+import json
 from django.db import models
 from django.conf import settings
 from temba_client.v2 import TembaClient
@@ -20,13 +24,16 @@ class RapidproKey(models.Model):
     created_at = models.DateTimeField(auto_now=False, auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True, auto_now_add=False)
 
+    class Meta:
+        ordering = ['-created_at', ]
+
     @classmethod
     def get_rapidpro_data(cls):
         keys = cls.objects.all()
         for rkey in keys:
             client = TembaClient(rkey.host, rkey.key)
-            Group.add_groups(client=client)
-            Contact.save_contacts(client=client)
+            # Group.add_groups(client=client)
+            # Contact.save_contacts(client=client)
             Flow.add_flows(client=client)
             Campaign.add_campaigns(client=client)
             CampaignEvent.add_campaign_events(client=client)
@@ -250,13 +257,13 @@ class Message(models.Model):
     @classmethod
     def get_weekly_sent_messages(cls, contacts_list):
         query = reduce(operator.or_, (Q(urn__contains=contact) for contact in contacts_list))
-        date_diff = datetime.datetime.now() - datetime.timedelta(days=7)
+        date_diff = datetime.datetime.now() - datetime.timedelta(days=21)
         return cls.objects.filter(query, direction='out', sent_on__range=(date_diff, datetime.datetime.now())).all()
 
     @classmethod
     def get_weekly_delivered_messages(cls, contacts_list):
         query = reduce(operator.or_, (Q(urn__contains=contact) for contact in contacts_list))
-        date_diff = datetime.datetime.now() - datetime.timedelta(days=7)
+        date_diff = datetime.datetime.now() - datetime.timedelta(days=21)
         return cls.objects.filter(query, direction='out', status='delivered',
                                   sent_on__range=(date_diff, datetime.datetime.now())).all()
 
@@ -272,7 +279,7 @@ class Message(models.Model):
         query = reduce(operator.or_, (Q(urn__contains=contact) for contact in contacts_list))
         date_diff = datetime.datetime.now() - datetime.timedelta(days=21)  ## this is for testing
         return cls.objects.filter(query, direction='out', sent_on__range=(date_diff, datetime.datetime.now())) \
-            .exclude(status__in=["sent", "delivered", "handled", "errored", "failed", "resent"]).all()
+            .exclude(status__in=["delivered", "handled", "errored", "failed", "resent"]).all()
 
     @classmethod
     def get_monthly_failed_messages(cls, contacts_list):
@@ -380,6 +387,9 @@ class CampaignEvent(models.Model):
     flow = models.CharField(max_length=200, blank=True, null=True)
     created_on = models.DateTimeField()
 
+    class Meta:
+        ordering = ['-created_on',]
+
     @classmethod
     def add_campaign_events(cls, client):
         added = 0
@@ -415,8 +425,7 @@ class CampaignEvent(models.Model):
 
     @classmethod
     def get_campaign_event(cls):
-        date_diff = datetime.datetime.now() - datetime.timedelta(days=21)
-        return cls.objects.filter(created_on__range=(date_diff, datetime.datetime.now())).all()
+        return cls.objects.all()
 
     def __str__(self):
         return self.uuid
@@ -438,10 +447,11 @@ class Run(models.Model):
         for run_batch in client.get_runs(contact=contact).iterfetches(retry_on_rate_exceed=True):
             for run in run_batch:
                 if not cls.run_exists(run):
-                    r = cls.objects.create(run_id=run.id, flow=run.flow, contact=contact, responded=run.responded,
+                    run_instance = cls.objects.create(run_id=run.id, flow=run.flow, contact=contact, responded=run.responded,
                                            exit_type=run.exit_type, exited_on=run.exited_on,
                                            created_on=run.created_on, modified_on=run.modified_on)
                     added += 1
+                    Value.add_values(run=run_instance, values=run_instance.values)
 
         return added
 
@@ -477,17 +487,21 @@ class Value(models.Model):
 class Email(models.Model):
     name = models.CharField(max_length=100)
     email_address = models.EmailField(max_length=200)
-    project = models.ForeignKey(Project)
+    project = models.ManyToManyField(Project)
 
     @classmethod
     def email_report(cls, pdf_file, csv_file, project_id):
+        project = Project.objects.get(id=project_id)
         mailing_list = []
-        email_addresses = cls.objects.filter(project__id=project_id).all()
+        email_addresses = cls.objects.filter(project__in=[project]).all()
         for email_address in email_addresses:
             mailing_list.append(email_address.email_address)
 
+        report_datetime = datetime.datetime.now()
+
+        email_subject = '%s Weekly ( %s ) Report' % project.name % report_datetime
         email_body = '<h4>Please find attached the weekly report.</h4>'
-        email_message = EmailMessage('mCRAG weekly report', email_body, settings.EMAIL_HOST_USER, mailing_list)
+        email_message = EmailMessage(email_subject, email_body, settings.EMAIL_HOST_USER, mailing_list)
         email_message.attach_file(pdf_file)
         email_message.attach_file(csv_file)
         email_message.content_subtype = "html"
@@ -495,3 +509,58 @@ class Email(models.Model):
 
     def __str__(self):
         return str(self.name)
+
+
+class Voice(models.Model):
+    id = models.IntegerField(primary_key=True)
+    uuid = models.CharField(max_length=50)
+    project = models.ForeignKey(Project)
+    contact = models.ForeignKey(Contact)
+    reason = models.TextField()
+    advice = models.TextField()
+    created_by = models.CharField(max_length=100)
+    created_on = models.DateTimeField(null=True)
+
+    @classmethod
+    def get_data(cls, proj):
+        url = "http://voice.tmcg.co.ug/~nicholas/data.php?project={0}".format(urllib2.quote(proj))
+        req = urllib2.Request(url)
+        response = urllib2.urlopen(req)
+        datas = json.load(response)
+        for data in datas:
+            if cls.voice_id_exists(id=data['id']):
+                pass
+            else:
+                urns = cls.clean_contact(data['phone_number'])
+                if Contact.urns_exists(number=urns):
+                    uuid = hashlib.md5(data['created_at']).hexdigest()
+                    obj = Contact.objects.filter(urns=urns).first()
+                    pro = Project.objects.get(name=proj)
+                    cls.objects.create(id=data['id'], uuid=uuid, project=pro, contact=obj,
+                                       reason=data['reason_for_call'],
+                                       advice=data['advice_given'], created_by=data['created_by'],
+                                       created_on=data['created_at'])
+                else:
+                    pass
+
+        return datas
+
+    @classmethod
+    def voice_id_exists(cls, id):
+        return cls.objects.filter(uuid=id).exists()
+
+    @classmethod
+    def clean_contact(cls, contact):
+        c = ''
+        if len(contact) == 10:
+            c = '+256' + contact[1:]
+        elif len(contact) == 12:
+            c = '+' + contact
+        elif len(contact) == 9:
+            c = '+256' + contact
+        else:
+            pass
+        return c
+
+    def __unicode__(self):
+        return str(self.project)
