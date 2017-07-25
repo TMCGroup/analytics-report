@@ -203,7 +203,7 @@ def send_csv_attachment_email(request, project_id):
     #     writer.writerow([message.urn, message.text.encode("utf8"), message.status, message.sent_on])
 
     # Email.email_report(csv_file=csv_file.getvalue(), project_id=project.id)
-    subject = '%s Weekly ( as of %s ) Report' % (project.name, datetime_variable)
+    subject = '%s Weekly Report %s' % (project.name, datetime_variable)
     email = EmailMessage(
         subject,
         'Please find attached a sample of the csv file attachment, voice data and pdf view to be included '

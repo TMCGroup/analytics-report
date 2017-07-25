@@ -499,7 +499,7 @@ class Value(models.Model):
 class Email(models.Model):
     name = models.CharField(max_length=100)
     email_address = models.EmailField(max_length=200)
-    project = models.ForeignKey(Project, related_name='projects', blank=True, null=True)
+    project = models.ManyToManyField(Project, related_name='projects', blank=True, null=True)
 
     @classmethod
     def add_email(cls, name, email_address, project):
