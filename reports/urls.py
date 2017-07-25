@@ -8,6 +8,5 @@ urlpatterns = [
     url(r'^report/csv/(?P<project_id>[\-\w]+)/$', export_to_csv, name='csv'),
     url(r'^project/$', project_groups_detail, name='project-groups'),
     url(r'^report/version/one/(?P<project_id>[\-\w]+)/$', report_template_one, name='template_one'),
-    url(r'^data/$', getdatatest),
-    url(r'^getget/$', getget),
+    url(r'^data/$', getdatatest)
 ]

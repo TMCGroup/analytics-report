@@ -41,8 +41,10 @@ def report_template_one(request, project_id):
     voice_platiform = Voice.objects.filter(project=project).all()
 
     group_list = []
+
     for group in project_groups:
         group_list.append(group.name)
+
     contacts = Contact.get_project_contacts(project_list=group_list)
     weekly_contacts = Contact.get_weekly_project_contacts(project_list=group_list)
     contact_counts = Contact.get_project_contacts_count(project_list=group_list)
@@ -128,6 +130,7 @@ def export_to_csv(request, project_id):
         writer.writerow([message.urn, message.text, message.status, message.sent_on, ])
 
     return response
+
 
 
 def send_csv_attachment_email(request, project_id):
@@ -222,9 +225,5 @@ def getdatatest(request):
     for d in data:
         contact = d['phone_number']
         lss.append(contact)
-    return render(request, 'report/data.html', locals())
+    return render(request, 'report/data.html')
 
-
-def getget(request):
-    cc = Contact.objects.filter(urns="+256757446110").first()
-    return render(request, 'report/test.html', locals())
