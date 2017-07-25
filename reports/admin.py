@@ -56,7 +56,8 @@ class GroupAdmin(admin.ModelAdmin):
 
 
 class RunAdmin(admin.ModelAdmin):
-    list_display = ('id', 'run_id', 'flow', 'contact', 'responded', 'exit_type', 'exited_on', 'created_on', 'modified_on')
+    list_display = (
+    'id', 'run_id', 'flow', 'contact', 'responded', 'exit_type', 'exited_on', 'created_on', 'modified_on')
     search_fields = ['run_id', 'contact', 'flow']
 
 
