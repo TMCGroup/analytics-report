@@ -1,5 +1,5 @@
 from django.test import TestCase
-from .models import Contact, Message, Group, Run, Value, Step, Flow
+from .models import Contact, Message, Group, Run, Value, Flow
 from django.utils import timezone
 
 
@@ -164,24 +164,6 @@ class TestFlow(TestCase):
         added_flow = Flow.add_flows(run_object, flow)
         self.assertEquals(Flow.objects.count(), flow_count + added_flow)
 
-
-class TestStep(TestCase):
-    def setUp(self):
-        group = Group.objects.create(uuid="23fg", name="test-group", query="test", count=2)
-        Contact.objects.create(uuid="uuid-test", name="name-test", language="language-test",
-                               urns="urns-test", groups=group, fields="fields-test", blocked=False,
-                               stopped=False, created_on=None, modified_on=None)
-        c = Contact.objects.first()
-        run = Run.objects.create(id=6, run_id=6, responded=False, created_on=timezone.now(), modified_on=timezone.now(),
-                                 exit_type='completed', contact=c)
-        Step.objects.create(node='788ghh', time=timezone.now(), run_id=run)
-
-    def test_add_steps(self):
-        run_object = Run.objects.first()
-        steps = Step.objects.all()
-        step_count = Step.objects.count()
-        added_steps = Step.add_steps(run_object, steps)
-        self.assertEquals(Step.objects.count(), step_count + added_steps)
 
 
 class TestValue(TestCase):

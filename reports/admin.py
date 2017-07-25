@@ -2,10 +2,11 @@ from django.contrib import admin
 from .models import Contact, Group, Run, Flow, Message, RapidproKey, Project, CampaignEvent, Campaign, Voice, Email
 
 
-
 class EmailAdmin(admin.ModelAdmin):
     list_display = ('name', 'email_address', 'show_projects')
+
     search_fields = ['name', 'show_projects']
+
 
     def show_projects(self, obj):
         return "\n".join([a.name for a in obj.project.all()])
