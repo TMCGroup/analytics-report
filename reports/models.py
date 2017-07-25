@@ -499,7 +499,7 @@ class Value(models.Model):
 class Email(models.Model):
     name = models.CharField(max_length=100)
     email_address = models.EmailField(max_length=200)
-    project = models.ManyToManyField(Project, related_name='projects', blank=True, null=True)
+    project = models.ManyToManyField(Project)
 
     @classmethod
     def add_email(cls, name, email_address, project):
@@ -563,7 +563,7 @@ class Voice(models.Model):
 
     @classmethod
     def voice_id_exists(cls, id):
-        return cls.objects.filter(uuid=id).exists()
+        return cls.objects.filter(id=id).exists()
 
     @classmethod
     def clean_contact(cls, contact):
