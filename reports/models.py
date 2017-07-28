@@ -138,8 +138,8 @@ class Contact(models.Model):
                                                                       blocked=contact.blocked, stopped=contact.stopped,
                                                                       created_on=contact.created_on,
                                                                       modified_on=contact.modified_on)
-                    Message.save_messages(client, contact=contact_instance)
-                    Run.add_runs(client, contact=contact_instance)
+                    # Message.save_messages(client, contact=contact_instance)
+                    # Run.add_runs(client, contact=contact_instance)
 
                     grp[:] = []
 
@@ -149,8 +149,8 @@ class Contact(models.Model):
                                             urns=cls.clean_contacts(contact), groups=grp, fields=contact.fields,
                                             blocked=contact.blocked, stopped=contact.stopped,
                                             created_on=contact.created_on, modified_on=contact.modified_on)
-                    Message.save_messages(client, contact=contact_instance)
-                    Run.add_runs(client, contact=contact_instance)
+                    # Message.save_messages(client, contact=contact_instance)
+                    # Run.add_runs(client, contact=contact_instance)
                     grp[:] = []
 
                     added += 1
@@ -251,29 +251,30 @@ class Message(models.Model):
     @classmethod
     def get_weekly_sent_messages(cls, contacts_list):
         query = reduce(operator.or_, (Q(urn__contains=contact) for contact in contacts_list))
-        date_diff = datetime.datetime.now() - datetime.timedelta(days=30)
-        return cls.objects.filter(query, direction='out', sent_on__range=(date_diff, datetime.datetime.now())).all()
+        date_diff = datetime.datetime.now() - datetime.timedelta(days=7)
+        return cls.objects.filter(query, direction='out', sent_on__range=(date_diff, datetime.datetime.now()))\
+            .exclude(status='queued').all()
 
     @classmethod
     def get_weekly_delivered_messages(cls, contacts_list):
         query = reduce(operator.or_, (Q(urn__contains=contact) for contact in contacts_list))
-        date_diff = datetime.datetime.now() - datetime.timedelta(days=30)
+        date_diff = datetime.datetime.now() - datetime.timedelta(days=7)
         return cls.objects.filter(query, direction='out', status='delivered',
                                   sent_on__range=(date_diff, datetime.datetime.now())).all()
 
     @classmethod
     def get_weekly_failed_messages(cls, contacts_list):
         query = reduce(operator.or_, (Q(urn__contains=contact) for contact in contacts_list))
-        date_diff = datetime.datetime.now() - datetime.timedelta(days=30)  ## this is for testing
+        date_diff = datetime.datetime.now() - datetime.timedelta(days=7)  ## this is for testing
         return cls.objects.filter(query, status='failed', direction='out',
                                   sent_on__range=(date_diff, datetime.datetime.now())).all()
 
     @classmethod
     def get_weekly_hanging_messages(cls, contacts_list):
         query = reduce(operator.or_, (Q(urn__contains=contact) for contact in contacts_list))
-        date_diff = datetime.datetime.now() - datetime.timedelta(days=30)  ## this is for testing
+        date_diff = datetime.datetime.now() - datetime.timedelta(days=7)  ## this is for testing
         return cls.objects.filter(query, direction='out', sent_on__range=(date_diff, datetime.datetime.now())) \
-            .exclude(status__in=["delivered", "handled", "errored", "failed", "resent"]).all()
+            .exclude(status__in=["delivered", "handled", "errored", "failed", "resent", "queued"]).all()
 
     @classmethod
     def get_monthly_failed_messages(cls, contacts_list):
@@ -285,7 +286,7 @@ class Message(models.Model):
     @classmethod
     def get_weekly_unread_messages(cls, contacts_list):
         query = reduce(operator.or_, (Q(urn__contains=contact) for contact in contacts_list))
-        date_diff = datetime.datetime.now() - datetime.timedelta(days=30)
+        date_diff = datetime.datetime.now() - datetime.timedelta(days=7)
         return cls.objects.filter(query, direction='out', status='errored',
                                   sent_on__range=(date_diff, datetime.datetime.now())).all()
 

@@ -5,6 +5,7 @@ from reports.models import Group, Contact, Message, Run
 
 class Command(BaseCommand):
     def handle(self, *args, **options):
+
         Contact.clean_contacts()
         Message.clean_msg_contacts()
         #html_to_pdf_view()

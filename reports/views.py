@@ -194,7 +194,7 @@ def send_csv_attachment_email(request, project_id):
     writer.writerow([])
     writer.writerow([])
     writer.writerow(['%s Weekly Hanging Messages' % project.name])
-    writer.writerow(['Weekly Hanging Messages Count %s' % weekly_hanging_messages])
+    writer.writerow(['Weekly Hanging Messages Count %s' % weekly_hanging_messages.count()])
     writer.writerow(['Contact Number', 'Message', 'Status', 'Sent On'])
     for message in weekly_hanging_messages:
         writer.writerow([message.urn, message.text.encode("utf8"), message.status, message.sent_on, ])
@@ -225,5 +225,6 @@ def getdatatest(request):
     for d in data:
         contact = d['phone_number']
         lss.append(contact)
-    return render(request, 'report/data.html')
+    return HttpResponse("Voice data added")
+    # return render(request, 'report/data.html', locals())
 
