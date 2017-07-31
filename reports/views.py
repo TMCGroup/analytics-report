@@ -13,6 +13,7 @@ from django.utils.timezone import now
 from itertools import chain
 from django.views.generic.base import View
 import csv
+import json
 import datetime
 
 
@@ -46,8 +47,9 @@ def report_template_one(request, project_id):
         group_list.append(group.name)
 
     contacts = Contact.get_project_contacts(project_list=group_list)
+
     weekly_contacts = Contact.get_weekly_project_contacts(project_list=group_list)
-    contact_counts = Contact.get_project_contacts_count(project_list=group_list)
+
     weekly_contacts_value_list = Contact.get_all_project_contacts_value_list(project_list=group_list)
     contact_urns_list = []
     for contact in contacts:
@@ -64,8 +66,40 @@ def report_template_one(request, project_id):
     return render(request, 'report/template_one.html', locals())
 
 
+def report_template_one_pdf(request, project_id):
+    project = Project.objects.get(id=project_id)
+    project_groups = project.group.all()
+    project_groups_count = project.group.count()
+    project_group_list = Project.get_project_data(name=project.name)
+    voice_platiform = Voice.objects.filter(project=project).all()
+
+    group_list = []
+
+    for group in project_groups:
+        group_list.append(group.name)
+
+    contacts = Contact.get_project_contacts(project_list=group_list)
+    weekly_contacts = Contact.get_weekly_project_contacts(project_list=group_list)
+    contact_counts = Contact.get_project_contacts_count(project_list=group_list)
+    weekly_contacts_value_list = Contact.get_all_project_contacts_value_list(project_list=group_list)
+    contact_urns_list = []
+    for contact in contacts:
+        contact_urns_list.append(contact.urns)
+
+    weekly_sent_messages = Message.get_weekly_sent_messages(contact_urns_list)
+    weekly_delivered_messages = Message.get_weekly_delivered_messages(contact_urns_list)
+    weekly_failed_messages = Message.get_weekly_failed_messages(contact_urns_list)
+    weekly_hanging_messages = Message.get_weekly_hanging_messages(contact_urns_list)
+    weekly_unread_messages = Message.get_weekly_unread_messages(contact_urns_list)
+    weekly_campaign_events = CampaignEvent.get_campaign_event()
+    groups = Group.get_all_groups()
+
+    return render(request, 'report/my-pdf.html', locals())
+
+
 def export_to_csv(request, project_id):
     project = Project.objects.get(id=project_id)
+    voice_platiform = Voice.objects.filter(project=project).all()
     datetime_variable = datetime.datetime.now()
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="%s_report_%s.csv"' % (project.name, datetime_variable)
@@ -128,9 +162,16 @@ def export_to_csv(request, project_id):
     writer.writerow(['Contact Number', 'Message', 'Status', 'Sent On'])
     for message in weekly_hanging_messages:
         writer.writerow([message.urn, message.text, message.status, message.sent_on, ])
+    writer.writerow([])
+    writer.writerow([])
+    writer.writerow(['Contact Number', 'Reason for call', 'Date'])
+    for call in voice_platiform:
+        writer.writerow([call.contact, call.reason, call.created_on])
+    writer.writerow([])
+    writer.writerow([])
+    writer.writerow([])
 
     return response
-
 
 
 def send_csv_attachment_email(request, project_id):
@@ -139,6 +180,7 @@ def send_csv_attachment_email(request, project_id):
     project = Project.objects.get(id=project_id)
     datetime_variable = datetime.date.today()
     project_groups = project.group.all()
+    voice_platiform = Voice.objects.filter(project=project).all()
     group_list = []
     for group in project_groups:
         group_list.append(group.name)
@@ -170,7 +212,7 @@ def send_csv_attachment_email(request, project_id):
     writer.writerow(['All %s Contacts' % project.name])
     writer.writerow(['Contact Number', 'Contact Name', 'Group(s)', 'Created on / Joined on'])
     for contact in contacts:
-        writer.writerow([contact.urns, contact.name,  contact.groups, contact.created_on])
+        writer.writerow([contact.urns, contact.name, contact.groups, contact.created_on])
     writer.writerow([])
     writer.writerow([])
     writer.writerow(['%s Weekly Enrolled Contacts' % project.name])
@@ -194,11 +236,19 @@ def send_csv_attachment_email(request, project_id):
     writer.writerow([])
     writer.writerow([])
     writer.writerow(['%s Weekly Hanging Messages' % project.name])
-    writer.writerow(['Weekly Hanging Messages Count %s' % weekly_hanging_messages])
+    writer.writerow(['Weekly Hanging Messages Count %s' % weekly_hanging_messages.count()])
     writer.writerow(['Contact Number', 'Message', 'Status', 'Sent On'])
     for message in weekly_hanging_messages:
         writer.writerow([message.urn, message.text.encode("utf8"), message.status, message.sent_on, ])
-    # writer.writerow([])
+    writer.writerow([])
+    writer.writerow([])
+    writer.writerow([])
+    writer.writerow(['Contact Number', 'Reason for call', 'Date'])
+    for call in voice_platiform:
+        writer.writerow([call.contact, call.reason, call.created_on])
+    writer.writerow([])
+    writer.writerow([])
+    writer.writerow([])
     # writer.writerow([])
     # writer.writerow(['%s Weekly Sent Messages' % project.name])
     # writer.writerow(['Contact Number', 'Message', 'Status', 'Sent On'])
@@ -226,4 +276,3 @@ def getdatatest(request):
         contact = d['phone_number']
         lss.append(contact)
     return render(request, 'report/data.html')
-

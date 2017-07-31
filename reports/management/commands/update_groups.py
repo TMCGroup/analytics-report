@@ -4,5 +4,5 @@ from reports.models import Group, RapidproKey
 
 class Command(BaseCommand):
     def handle(self, *args, **options):
-            RapidproKey.get_rapidpro_groups()
+            RapidproKey.get_rapidpro_data()
             self.stdout.write(self.style.SUCCESS('Successfully added groups'))

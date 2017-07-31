@@ -39,7 +39,7 @@ class ContactAdmin(admin.ModelAdmin):
 
 class MessageAdmin(admin.ModelAdmin):
     list_display = ('contact', 'urn', 'direction', 'type', 'status',
-                    'visibility', 'text', 'labels', 'created_on', 'sent_on', 'modified_on')
+                    'visibility', 'text', 'labels', 'created_on', 'sent_on', 'modified_on', 'msg_fk_fixed')
     list_filter = ('created_on', 'modified_on')
     search_fields = ['urn', 'text']
 
@@ -57,7 +57,7 @@ class GroupAdmin(admin.ModelAdmin):
 
 class RunAdmin(admin.ModelAdmin):
     list_display = (
-    'id', 'run_id', 'flow', 'contact', 'responded', 'exit_type', 'exited_on', 'created_on', 'modified_on')
+    'id', 'run_id', 'flow', 'contact', 'responded', 'exit_type', 'exited_on', 'created_on', 'modified_on', 'run_fk_fixed')
     search_fields = ['run_id', 'contact', 'flow']
 
 

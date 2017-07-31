@@ -1,20 +1,31 @@
 from celery.schedules import crontab
 from celery.task import periodic_task
 from celery.utils.log import get_task_logger
-from .models import Group, Contact, Message
+from celery import shared_task
+from .models import Group, Email, Message, RapidproKey, Run, Project
 
 
-@periodic_task(run_every=(crontab(minute='*/3')), name="sync_groups", ignore_result=True)
-def sync_groups():
-    #Group.add_groups()
-    Group.get_group()
-    #Contact.clean_contacts()
-    #Message.clean_msg_contacts()
+@shared_task
+def get_rapidpro_data():
+    RapidproKey.get_rapidpro_data()
+    return
 
 
-# @periodic_task(run_every=(crontab(minute='*/')), name="add_groups", ignore_result=True)
-# def add_groups():
-#     Group.add_groups()
+@shared_task
+def organise_data():
+    Message.assign_foreignkey()
+    Run.assign_foreignkey()
+    return
 
 
+@shared_task
+def get_hiwa_data():
+    Project.get_project_voice_data()
+    return
+
+
+@shared_task
+def send_emails():
+    Email.email_report()
+    return
 
