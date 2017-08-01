@@ -275,4 +275,6 @@ def getdatatest(request):
     for d in data:
         contact = d['phone_number']
         lss.append(contact)
+
     return render(request, 'report/data.html')
+

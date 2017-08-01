@@ -66,10 +66,7 @@
             <td style="padding-right: 10px">{{ weekly_sent_message.text }}</td>
             <td style="padding-right: 10px">{{ weekly_sent_message.sent_on }}</td>
         </tr>
-    {% for weekly_campaign_event in weekly_campaign_events %}
-        {% if weekly_sent_message.text  in weekly_campaign_event.message %}{{ weekly_campaign_event.campaign }}
-        {% endif %}
-    {% endfor %}
+
 
 {% endfor %}
     </table>
@@ -91,10 +88,7 @@
         <td style="padding-right: 10px">{{ weekly_delivered_message.text }}</td>
         <td style="padding-right: 10px">{{ weekly_delivered_message.sent_on }}</td>
     </tr>
-    {% for weekly_campaign_event in weekly_campaign_events %}
-        {% if weekly_delivered_message.text  in weekly_campaign_event.message %}{{ weekly_campaign_event.campaign }}
-        {% endif %}
-    {% endfor %}
+
 
 {% endfor %}
         </table>
@@ -112,10 +106,7 @@
 {% for weekly_failed_message in weekly_failed_messages %}
 
     <tr><td style="padding-right: 10px">{{ weekly_failed_message.urn }}</td><td style="padding-right: 10px">{{ weekly_failed_message.text }}</td><td style="padding-right: 10px">{{ weekly_failed_message.sent_on }}</td></tr>
-    {% for weekly_campaign_event in weekly_campaign_events %}
-        {% if  weekly_failed_message.text in weekly_campaign_event.message  %}{{ weekly_campaign_event.campaign }}
-        {% endif %}
-    {% endfor %}
+
 {% endfor %}
     </table>
     {% else %}
@@ -136,10 +127,7 @@
         <td style="padding-right: 10px">{{ weekly_hanging_message.text }}</td>
         <td style="padding-right: 10px">{{ weekly_hanging_message.sent_on }}</td>
     </tr>
-    {% for weekly_campaign_event in weekly_campaign_events %}
-        {% if weekly_hanging_message.text  in weekly_campaign_event.message %}{{ weekly_campaign_event.campaign }}
-        {% endif %}
-    {% endfor %}
+
 
 {% endfor %}
         </table>
@@ -161,10 +149,7 @@
         <td style="padding-right: 10px">{{ weekly_unread_message.text }}</td>
         <td style="padding-right: 10px">{{ weekly_unread_message.sent_on }}</td>
     </tr>
-    {% for weekly_campaign_event in weekly_campaign_events %}
-        {% if weekly_unread_message.text  in weekly_campaign_event.message %}{{ weekly_campaign_event.campaign }}
-        {% endif %}
-    {% endfor %}
+
 {% endfor %}
             </table>
 {% else %}
