@@ -75,7 +75,7 @@ WSGI_APPLICATION = 'analyticreports.wsgi.application'
 
 DATABASES = {
     'default': {
-<<<<<<< HEAD
+
 
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'analytics_report',
@@ -86,11 +86,6 @@ DATABASES = {
     }
 }
 
-=======
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-    }
-}
 
 # DATABASES = {
 #     'default': {
@@ -103,8 +98,6 @@ DATABASES = {
 #     }
 # }
 
-
->>>>>>> 8a00290f0af75586beff422036a792724bff384d
 # Password validation
 # https://docs.djangoproject.com/en/1.11/ref/settings/#auth-password-validators
 
