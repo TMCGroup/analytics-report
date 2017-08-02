@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Contact, Group, Run, Flow, Message, RapidproKey, Project, CampaignEvent, Campaign, Voice, Email
+from .models import Contact, Group, Run, Flow, Message, Workspace, Project, CampaignEvent, Campaign, Voice, Email
 
 
 class EmailAdmin(admin.ModelAdmin):
@@ -12,9 +12,9 @@ class EmailAdmin(admin.ModelAdmin):
         return "\n".join([a.name for a in obj.project.all()])
 
 
-class RapidprokeyAdmin(admin.ModelAdmin):
-    list_display = ('id', 'workspace', 'host', 'key')
-    search_fields = ['workspace']
+class WorkspaceAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name', 'host', 'key')
+    search_fields = ['name']
 
 
 class VoiceAdmin(admin.ModelAdmin):
@@ -64,7 +64,7 @@ class RunAdmin(admin.ModelAdmin):
 admin.site.register(Project, ProjectAdmin)
 admin.site.register(Voice, VoiceAdmin)
 admin.site.register(Contact, ContactAdmin)
-admin.site.register(RapidproKey, RapidprokeyAdmin)
+admin.site.register(Workspace, WorkspaceAdmin)
 admin.site.register(Message, MessageAdmin)
 admin.site.register(Group, GroupAdmin)
 admin.site.register(Email, EmailAdmin)
