@@ -35,6 +35,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_nose',
+    'django_celery_beat',
     'reports'
 ]
 
@@ -74,8 +76,12 @@ WSGI_APPLICATION = 'analyticreports.wsgi.application'
 DATABASES = {
     'default': {
 
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'analytics_report',
+        'USER': 'faith',
+        'PASSWORD': '',
+        'HOST': '',
 
     }
 }
@@ -104,7 +110,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Africa/Kampala'
 
 USE_I18N = True
 
@@ -118,15 +124,12 @@ USE_TZ = True
 STATIC_URL = '/static/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
-HOST = 'hiwa.tmcg.co.ug'
-KEY = '3aac2aba67a0cf83dc0ea49151a05088277eb4d6'
 
 #  For Gmail or Google Apps
 EMAIL_USE_TLS = True
 EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_HOST_USER = 'faithnassiwa@gmail.com'
-EMAIL_HOST_PASSWORD = 'nmcwlqkukvdnyfho'  # app specfic password generated from
-# support.google.com/accounts/answer/185833
+EMAIL_HOST_USER = ''
+EMAIL_HOST_PASSWORD = ''
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 DEFAULT_FROM_EMAIL = 'Preferably use TMCGs info Email <faithnassiwa@gmail.com>'

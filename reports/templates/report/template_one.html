@@ -1,4 +1,5 @@
 {% load report_extras %}
+{% load report_tags %}
 
 <!DOCTYPE html>
 <html lang="en">
@@ -17,9 +18,15 @@
     {% else %}
     <table>
     <tr><th>Group Name</th><th>Number of contacts</th></tr>
-    {%  for group in project_groups %}<tr><td>{{ group.name }}</td><td>{{ group.count }}</td></tr>{% endfor %}
+    {%  for group in project_groups %}
+        <tr>
+            <td>{{ group.name }}</td>
+            <td>{{ group.count }}</td>
+        </tr>
+    {% endfor %}
 {% endif %}
     </table>
+
 
 
 <h3>{{ project_group.name }} Contacts</h3>
@@ -27,39 +34,58 @@
     <tr><th>NAME</th><th>Number</th><th>Groups</th></tr>
 {% for contact in contacts %}
 
-    <tr><td>{{ contact.urns }}</td><td>{{ contact.name }}</td><td>{{ contact.groups }}</td></tr>
+    <tr>
+        <td>{{ contact.name }}</td>
+        <td style="padding-right: 10px">{{ contact.urns }}</td>
+        <td>{% clean contact.groups as groups %}{% for g in groups %}<ul><li>{{ g }}</li></ul>{% endfor %}</td>
+    </tr>
 
 {% endfor %}
     </table>
-<h3> Total Number of Contacts {{ contact_counts }}</h3>
-{#{{ contacts }} #}
+
 <br><br>
 <h3>{{ project_group.name }} Weekly Contacts</h3>
     <table>
     <tr><th>Name</th><th>Number</th><th>Groups</th></tr>
 {% for contact in weekly_contacts %}
-    <tr><td>{{ contact.name }}</td><td>{{ contact.urns }}</td><td>{{ contact.groups }}</td></tr>
+    <tr>
+        <td>{{ contact.name }}</td>
+        <td>{{ contact.urns }}</td>
+        <td>{% clean contact.groups as groups %}{% for g in groups %}<ul><li>{{ g }}</li></ul>{% endfor %}</td>
+    </tr>
 {% endfor %}
     </table>
 
-<h3>Contact Value List </h3>
-{{ weekly_contacts_value_list }}
 <br><br>
-<h3>Contact urns Value List </h3>
-{{ contact_urns_list }}
+<h3>{{ project_group.name }} Message Summary</h3>
+    <table>
+    <tr><th>Description</th><th>Number of Messages</th></tr>
+        <tr>
+            <td style="padding-right: 10px">Incoming Messages</td>
+            <td style="padding-right: 10px">{{ incoming_messages.count }}</td>
+        </tr>
+    <tr>
+            <td style="padding-right: 10px">Outgoing Messages</td>
+            <td style="padding-right: 10px">{{ outgoing_messages.count }}</td>
+        </tr>
+
+
 
 <br><br>
 <h3>{{ project_group.name }} Weekly Sent Messages</h3>
 {% if weekly_sent_messages.count > 0 %}
+    <table>
+    <tr><th>Number</th><th>Message</th><th>Date</th></tr>
 {% for weekly_sent_message in weekly_sent_messages %}
-    <ul>
-    <li>{{ weekly_sent_message.urn }}<br>{{ weekly_sent_message.text }}<br>{{ weekly_sent_message.sent_on }}</li>
-    <li>{% for weekly_campaign_event in weekly_campaign_events %}
-        {% if weekly_sent_message.text  in weekly_campaign_event.message %}{{ weekly_campaign_event.campaign }}
-        {% endif %}
-    {% endfor %}</li>
-    </ul>
+        <tr>
+            <td style="padding-right: 10px">{{ weekly_sent_message.urn }}</td>
+            <td style="padding-right: 10px">{{ weekly_sent_message.text }}</td>
+            <td style="padding-right: 10px">{{ weekly_sent_message.sent_on }}</td>
+        </tr>
+
+
 {% endfor %}
+    </table>
 {% else %}
     <h4>No sent messages</h4>
 {% endif %}
@@ -69,15 +95,19 @@
 <br><br>
 <h3>{{ project_group.name }} Weekly Delivered Messages</h3>
 {% if weekly_delivered_messages.count > 0 %}
+        <table>
+    <tr><th>Number</th><th>Message</th><th>Date</th></tr>
 {% for weekly_delivered_message in weekly_delivered_messages %}
-    <ul>
-    <li>{{ weekly_delivered_message.urn }}<br>{{ weekly_delivered_message.text }}<br>{{ weekly_delivered_message.sent_on }}</li>
-    <li>{% for weekly_campaign_event in weekly_campaign_events %}
-        {% if weekly_delivered_message.text  in weekly_campaign_event.message %}{{ weekly_campaign_event.campaign }}
-        {% endif %}
-    {% endfor %}</li>
-    </ul>
+
+    <tr>
+        <td style="padding-right: 10px">{{ weekly_delivered_message.urn }}</td>
+        <td style="padding-right: 10px">{{ weekly_delivered_message.text }}</td>
+        <td style="padding-right: 10px">{{ weekly_delivered_message.sent_on }}</td>
+    </tr>
+
+
 {% endfor %}
+        </table>
 {% else %}
     <h4>No delivered messages</h4>
 {% endif %}
@@ -87,15 +117,14 @@
 <br><br>
 <h3>{{ project_group.name }} Weekly Failed Messages</h3>
 {% if weekly_failed_messages > 0 %}
+    <table>
+    <tr><th>Number</th><th>Message</th><th>Date</th></tr>
 {% for weekly_failed_message in weekly_failed_messages %}
-    <ul>
-    <li>{{ weekly_failed_message.urn }}<br>{{ weekly_failed_message.text }}<br>{{ weekly_failed_message.sent_on }}</li>
-    <li>{% for weekly_campaign_event in weekly_campaign_events %}
-        {% if  weekly_failed_message.text in weekly_campaign_event.message  %}{{ weekly_campaign_event.campaign }}
-        {% endif %}
-    {% endfor %}</li>
-    </ul>
+
+    <tr><td style="padding-right: 10px">{{ weekly_failed_message.urn }}</td><td style="padding-right: 10px">{{ weekly_failed_message.text }}</td><td style="padding-right: 10px">{{ weekly_failed_message.sent_on }}</td></tr>
+
 {% endfor %}
+    </table>
     {% else %}
     <h4>No Failed messages</h4>
 {% endif %}
@@ -105,54 +134,63 @@
 <br><br>
 <h3>{{ project_group.name }} Weekly Hanging Messages</h3>
 {% if weekly_hanging_messages.count > 0 %}
+        <table>
+    <tr><th>Number</th><th>Message</th><th>Date</th></tr>
 {% for weekly_hanging_message in weekly_hanging_messages %}
-    <ul>
-    <li>{{ weekly_hanging_message.urn }}<br>{{ weekly_hanging_message.text }}<br>{{ weekly_hanging_message.sent_on }}</li>
-    <li>{% for weekly_campaign_event in weekly_campaign_events %}
-        {% if weekly_hanging_message.text  in weekly_campaign_event.message %}{{ weekly_campaign_event.campaign }}
-        {% endif %}
-    {% endfor %}</li>
-    </ul>
+
+    <tr>
+        <td style="padding-right: 10px">{{ weekly_hanging_message.urn }}</td>
+        <td style="padding-right: 10px">{{ weekly_hanging_message.text }}</td>
+        <td style="padding-right: 10px">{{ weekly_hanging_message.sent_on }}</td>
+    </tr>
+
+
 {% endfor %}
+        </table>
 {% else %}
     <h4>No hanging messages</h4>
 {% endif %}
-<h4>Number of weekly unread messages: {{ weekly_hanging_messages.count }}</h4>
+<h4>Number of weekly hanging messages: {{ weekly_hanging_messages.count }}</h4>
 
 
 <br><br>
 <h3>{{ project_group.name }} Weekly Unread Messages</h3>
 {% if weekly_unread_messages.count > 0 %}
+            <table>
+    <tr><th>Number</th><th>Message</th><th>Date</th></tr>
 {% for weekly_unread_message in weekly_unread_messages %}
-    <ul>
-    <li>{{ weekly_unread_message.urn }}<br>{{ weekly_unread_message.text }}<br>{{ weekly_unread_message.sent_on }}</li>
-    <li>{% for weekly_campaign_event in weekly_campaign_events %}
-        {% if weekly_unread_message.text  in weekly_campaign_event.message %}{{ weekly_campaign_event.campaign }}
-        {% endif %}
-    {% endfor %}</li>
-    </ul>
+
+    <tr>
+        <td style="padding-right: 10px">{{ weekly_unread_message.urn }}</td>
+        <td style="padding-right: 10px">{{ weekly_unread_message.text }}</td>
+        <td style="padding-right: 10px">{{ weekly_unread_message.sent_on }}</td>
+    </tr>
+
 {% endfor %}
+            </table>
 {% else %}
     <h4>No unread messages</h4>
 {% endif %}
 <h4>Number of weekly unread messages: {{ weekly_unread_messages.count }}</h4>
 
 {% endfor %}
-{#<h1>Weekly Voice</h1>#}
-{#<table>#}
-{#<tr>#}
-{#<th>Contact</th>#}
-{#<th>Reason for call</th>#}
-{#<th>Created by</th>#}
-{#</tr>#}
-{#{% for c in voice_platiform %}#}
-{#    <tr>#}
-{#    <td>{{ c.contact }}</td>#}
-{#    <td>{{ c.reason }}</td>#}
-{#    <td>{{ c.created_by }}</td>#}
-{#    </tr>#}
-{#{% endfor %}#}
-{#</table>#}
+<h1>Weekly Voice</h1>
+<table>
+<tr>
+<th>Contact</th>
+<th>Reason for call</th>
+<th>Created by</th>
+<th>Date</th>
+</tr>
+{% for c in voice_platform %}
+    <tr>
+    <td style="padding-right: 10px">{{ c.contact }}</td>
+    <td style="padding-right: 10px">{{ c.reason }}</td>
+    <td style="padding-right: 10px">{{ c.created_by }}</td>
+    <td style="padding-right: 10px">{{ c.created_on }}</td>
+    </tr>
+{% endfor %}
+</table>
+    </body>
 
-  </body>
 </html>

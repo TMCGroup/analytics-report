@@ -15,3 +15,5 @@ def get_value_from_dict(dict_data, key):
 @register.filter
 def hash(h, key):
     return h[key]
+
+
