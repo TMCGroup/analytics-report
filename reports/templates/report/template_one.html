@@ -28,6 +28,7 @@
     </table>
 
 
+
 <h3>{{ project_group.name }} Contacts</h3>
     <table>
     <tr><th>NAME</th><th>Number</th><th>Groups</th></tr>
@@ -54,6 +55,21 @@
     </tr>
 {% endfor %}
     </table>
+
+<br><br>
+<h3>{{ project_group.name }} Message Summary</h3>
+    <table>
+    <tr><th>Description</th><th>Number of Messages</th></tr>
+        <tr>
+            <td style="padding-right: 10px">Incoming Messages</td>
+            <td style="padding-right: 10px">{{ incoming_messages.count }}</td>
+        </tr>
+    <tr>
+            <td style="padding-right: 10px">Outgoing Messages</td>
+            <td style="padding-right: 10px">{{ outgoing_messages.count }}</td>
+        </tr>
+
+
 
 <br><br>
 <h3>{{ project_group.name }} Weekly Sent Messages</h3>
@@ -166,7 +182,7 @@
 <th>Created by</th>
 <th>Date</th>
 </tr>
-{% for c in voice_platiform %}
+{% for c in voice_platform %}
     <tr>
     <td style="padding-right: 10px">{{ c.contact }}</td>
     <td style="padding-right: 10px">{{ c.reason }}</td>

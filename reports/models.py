@@ -42,7 +42,7 @@ class Workspace(models.Model):
             Campaign.add_campaigns(client=client)
             CampaignEvent.add_campaign_events(client=client)
 
-        return workspaces
+        return workspaces.count()
 
     def __unicode__(self):
         return self.name
@@ -93,11 +93,11 @@ class Project(models.Model):
     modified_on = models.DateTimeField(auto_now=True, auto_now_add=False)
 
     @classmethod
-    def get_project_data(cls, name):
+    def get_project(cls, name):
         return cls.objects.filter(name=name, active=True).all()
 
     @classmethod
-    def get_project_voice_data(cls):
+    def get_project_voice_data(cls):  ## where is this function used? Is it redundant
         projects = cls.objects.filter(active=True).all()
         for project in projects:
             Voice.get_data(proj=project.name)
@@ -112,11 +112,11 @@ class Project(models.Model):
 
 
 class Contact(models.Model):
-    uuid = models.CharField(max_length=200)
-    name = models.CharField(max_length=255, null=True, blank=True)
-    language = models.CharField(max_length=255, null=True)
-    urns = models.CharField(max_length=200)
-    groups = models.CharField(max_length=200, blank=True)
+    uuid = models.CharField(max_length=100)
+    name = models.CharField(max_length=100, null=True, blank=True)
+    language = models.CharField(max_length=50, null=True)
+    urns = models.CharField(max_length=100)
+    groups = models.TextField(null=True, blank=True)
     fields = models.TextField(null=True, blank=True)
     blocked = models.BooleanField(default=False)
     stopped = models.BooleanField(default=False)
@@ -181,24 +181,24 @@ class Contact(models.Model):
         return cls.objects.all()
 
     @classmethod
-    def get_project_contacts(cls, project_list):
-        query = reduce(operator.or_, (Q(groups__contains=item) for item in project_list))
+    def get_project_contacts(cls, project_groups_list):
+        query = reduce(operator.or_, (Q(groups__contains=item) for item in project_groups_list))
         return cls.objects.filter(query).all()
 
     @classmethod
-    def get_project_contacts_count(cls, project_list):
-        query = reduce(operator.or_, (Q(groups__contains=item) for item in project_list))
+    def get_project_contacts_count(cls, project_groups_list):
+        query = reduce(operator.or_, (Q(groups__contains=item) for item in project_groups_list))
         return cls.objects.filter(query).count()
 
     @classmethod
-    def get_weekly_project_contacts(cls, project_list):
-        query = reduce(operator.or_, (Q(groups__contains=item) for item in project_list))
+    def get_weekly_project_contacts(cls, project_groups_list):
+        query = reduce(operator.or_, (Q(groups__contains=item) for item in project_groups_list))
         date_diff = datetime.datetime.now() - datetime.timedelta(days=7)
         return cls.objects.filter(query, created_on__range=(date_diff, datetime.datetime.now())).all()
 
     @classmethod
-    def get_all_project_contacts_value_list(cls, project_list):
-        query = reduce(operator.or_, (Q(groups__contains=item) for item in project_list))
+    def get_all_project_contacts_value_list(cls, project_groups_list):
+        query = reduce(operator.or_, (Q(groups__contains=item) for item in project_groups_list))
         return cls.objects.filter(query).values_list('urns')
 
     @classmethod
@@ -271,6 +271,16 @@ class Message(models.Model):
             cls.objects.filter(query).all().update(contact=contact, msg_fk_fixed=True)
             updated += 1
         return updated
+
+    @classmethod
+    def get_all_incoming_messages(cls, contacts_list):
+        query = reduce(operator.or_, (Q(urn__contains=contact) for contact in contacts_list))
+        return cls.objects.filter(query, direction='in').all()
+
+    @classmethod
+    def get_all_outgoing_messages(cls, contacts_list):
+        query = reduce(operator.or_, (Q(urn__contains=contact) for contact in contacts_list))
+        return cls.objects.filter(query, direction='out').all()
 
     @classmethod
     def get_weekly_sent_messages(cls, contacts_list):
@@ -531,7 +541,7 @@ class Email(models.Model):
         return cls.objects.create(name=name, email_address=email_address, project=project)
 
     @classmethod
-    def email_report(cls, csv_file, project_id):
+    def get_report_emails(cls, project_id):
         project = Project.objects.get(id=project_id)
         mailing_list = []
         email_addresses = cls.objects.filter(project__in=[project]).all()
@@ -544,9 +554,9 @@ class Email(models.Model):
         email_body = '<h4>Please find attached the weekly report.</h4>'
         email_message = EmailMessage(email_subject, email_body, settings.EMAIL_HOST_USER, mailing_list)
         # email_message.attach_file(pdf_file)
-        email_message.attach_file(csv_file, 'text/csv')
+        # email_message.attach_file(csv_file, 'text/csv') ## Had issues attaching csv file generated from the view
         email_message.content_subtype = "html"
-        return email_message.send()
+        return email_message
 
     def __unicode__(self):
         return self.name

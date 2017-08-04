@@ -1,5 +1,5 @@
 from django.core.management import BaseCommand
-from reports.models import Group, Workspace
+from reports.models import Workspace
 
 
 class Command(BaseCommand):

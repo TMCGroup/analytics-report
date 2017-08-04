@@ -2,12 +2,12 @@ from celery.schedules import crontab
 from celery.task import periodic_task
 from celery.utils.log import get_task_logger
 from celery import shared_task
-from .models import Group, Email, Message, RapidproKey, Run, Project
+from .models import Email, Message, Workspace, Run, Project
 
 
 @shared_task
-def get_rapidpro_data():
-    RapidproKey.get_rapidpro_data()
+def get_workspace_data():
+    Workspace.get_rapidpro_workspaces()
     return
 
 
