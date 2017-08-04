@@ -1,5 +1,16 @@
 .idea
-.pyc
 db.sqlite3
 analyticreports/settings.py
 migrations/*
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+
+
+
