@@ -7,7 +7,6 @@ class EmailAdmin(admin.ModelAdmin):
 
     search_fields = ['name', 'show_projects']
 
-
     def show_projects(self, obj):
         return "\n".join([a.name for a in obj.project.all()])
 
@@ -31,7 +30,7 @@ class ProjectAdmin(admin.ModelAdmin):
 
 
 class ContactAdmin(admin.ModelAdmin):
-    list_display = ('name', 'language', 'urns', 'groups', 'blocked', 'stopped',
+    list_display = ('id', 'name', 'language', 'urns', 'groups', 'blocked', 'stopped',
                     'created_on', 'modified_on')
     list_filter = ('created_on', 'modified_on')
     search_fields = ['name', 'urns', 'groups']
@@ -39,7 +38,7 @@ class ContactAdmin(admin.ModelAdmin):
 
 class MessageAdmin(admin.ModelAdmin):
     list_display = ('contact', 'urn', 'direction', 'type', 'status',
-                    'visibility', 'text', 'labels', 'created_on', 'sent_on', 'modified_on', 'msg_fk_fixed')
+                    'visibility', 'text', 'labels', 'created_on', 'sent_on', 'modified_on',)
     list_filter = ('created_on', 'modified_on')
     search_fields = ['urn', 'text']
 
@@ -57,7 +56,7 @@ class GroupAdmin(admin.ModelAdmin):
 
 class RunAdmin(admin.ModelAdmin):
     list_display = (
-    'id', 'run_id', 'flow', 'contact', 'responded', 'exit_type', 'exited_on', 'created_on', 'modified_on', 'run_fk_fixed')
+        'id', 'run_id', 'flow', 'contact', 'responded', 'exit_type', 'exited_on', 'created_on', 'modified_on')
     search_fields = ['run_id', 'contact', 'flow']
 
 

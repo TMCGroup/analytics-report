@@ -221,7 +221,6 @@ class Contact(models.Model):
 class Message(models.Model):
     msg_id = models.IntegerField()
     broadcast = models.IntegerField(null=True)
-    contact_uuid = models.CharField(max_length=200)
     contact = models.ForeignKey(Contact, null=True, blank=True)
     urn = models.CharField(max_length=200)
     channel = models.CharField(max_length=200)
@@ -234,7 +233,6 @@ class Message(models.Model):
     created_on = models.DateTimeField(auto_now_add=True, editable=False)
     sent_on = models.DateTimeField(null=True, blank=True)
     modified_on = models.DateTimeField(null=True, blank=True)
-    msg_fk_fixed = models.BooleanField(default=False)
 
     class Meta:
         ordering = ['-created_on', ]
@@ -248,12 +246,13 @@ class Message(models.Model):
                 for message in message_batch:
                     if not cls.message_exists(message):
                         cls.objects.create(msg_id=message.id, broadcast=message.broadcast,
-                                           contact_uuid=message.contact.uuid,
                                            urn=cls.clean_msg_contacts(message), channel=message.channel,
                                            direction=message.direction,
                                            type=message.type, status=message.status, visibility=message.visibility,
                                            text=message.text, labels=message.labels, created_on=message.created_on,
                                            sent_on=message.sent_on, modified_on=message.modified_on)
+                        contact = Contact.objects.get(uuid=message.contact.uuid)
+                        Message.objects.filter(msg_id=message.id).update(contact=contact.id)
                         added += 1
 
         return added
@@ -456,7 +455,6 @@ class CampaignEvent(models.Model):
     def campaign_event_exists(cls, campaign_event):
         return cls.objects.filter(uuid=campaign_event.uuid).exists()
 
-
     @classmethod
     def get_campaign_event(cls):
         return cls.objects.all()
@@ -467,15 +465,13 @@ class CampaignEvent(models.Model):
 
 class Run(models.Model):
     run_id = models.IntegerField()
-    flow = models.CharField(max_length=200)
-    contact_uuid = models.CharField(max_length=200)
+    flow = models.ForeignKey(Flow, null=True, blank=True)
     contact = models.ForeignKey(Contact, null=True, blank=True)
     responded = models.BooleanField(default=False)
     exit_type = models.CharField(max_length=100, null=True, blank=True)
     exited_on = models.DateTimeField(null=True)
     created_on = models.DateTimeField()
     modified_on = models.DateTimeField()
-    run_fk_fixed = models.BooleanField(default=False)
 
     @classmethod
     def add_runs(cls, client):
@@ -483,10 +479,14 @@ class Run(models.Model):
         for run_batch in client.get_runs().iterfetches(retry_on_rate_exceed=True):
             for run in run_batch:
                 if not cls.run_exists(run):
-                    run_instance = cls.objects.create(run_id=run.id, flow=run.flow, contact_uuid=run.contact.uuid,
+                    run_instance = cls.objects.create(run_id=run.id, flow=run.flow,
                                                       responded=run.responded,
                                                       exit_type=run.exit_type, exited_on=run.exited_on,
                                                       created_on=run.created_on, modified_on=run.modified_on)
+                    contact = Contact.objects.get(uuid=run.contact.uuid)
+                    flow = Flow.objects.get(uuid=run.flow.uuid)
+                    Run.objects.filter(run_id=run.id).update(contact=contact.id)
+                    Run.objects.filter(run_id=run.id).update(flow=flow.id)
                     added += 1
                     Value.add_values(run=run_instance, values=run.values)
 
@@ -511,24 +511,37 @@ class Run(models.Model):
 
 
 class Value(models.Model):
-    value = models.CharField(max_length=100, blank=True)
+    value_name = models.CharField(max_length=100, blank=True, null=True)
+    value = models.CharField(max_length=100, blank=True, null=True)
+    category = models.CharField(max_length=100, blank=True, null=True)
+    node = models.CharField(max_length=100, blank=True, null=True)
+    time = models.DateTimeField(blank=True, null=True)
     run = models.ForeignKey(Run, on_delete=models.CASCADE)
+
+    def __unicode__(self):
+        return self.value
 
     @classmethod
     def add_values(cls, run, values):
         added = 0
-        for val in values:
+        for outer_key, inner_dictionary in values.items():
             if not cls.value_exists(run=run):
-                cls.objects.create(value=val, run=run)
+                cls.objects.create(value_name=outer_key, value=values[outer_key].value,
+                                   category=values[outer_key].category,
+                                   node=values[outer_key].node,
+                                   time=values[outer_key].time, run=run)
                 added += 1
+            else:
+                cls.objects.filter(run=run).update(value_name=outer_key, value=values[outer_key].value,
+                                                   category=values[outer_key].category,
+                                                   node=values[outer_key].node,
+                                                   time=values[outer_key].time)
+
         return added
 
     @classmethod
     def value_exists(cls, run):
         return cls.objects.filter(run=run).exists()
-
-    def __unicode__(self):
-        return self.value
 
 
 class Email(models.Model):
