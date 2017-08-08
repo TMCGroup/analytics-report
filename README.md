@@ -28,8 +28,9 @@ python manage.py runserver
 	
 #Run the scheduler.
 celery -A analyticreports beat -l info -S django
-	
+
 [For more info on celery tasks](http://docs.celeryproject.org/en/latest/userguide/periodic-tasks.html)
+
 
  ```
 ## Usage
