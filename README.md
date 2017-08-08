@@ -29,9 +29,9 @@ python manage.py runserver
 #Run the scheduler.
 celery -A analyticreports beat -l info -S django
 
-[For more info on celery tasks] http://docs.celeryproject.org/en/latest/userguide/periodic-tasks.html
-
  ```
+ [For more info on celery tasks](http://docs.celeryproject.org/en/latest/userguide/periodic-tasks.html)
+
 ## Usage
 
 * Create superuser `python manage.py createsuperuser` and login via django admin
