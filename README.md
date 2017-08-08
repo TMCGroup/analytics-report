@@ -29,7 +29,7 @@ python manage.py runserver
 #Run the scheduler.
 celery -A analyticreports beat -l info -S django
 	
-[ For more info on celery tasks ]( http://docs.celeryproject.org/en/latest/userguide/periodic-tasks.html )
+[For more info on celery tasks](http://docs.celeryproject.org/en/latest/userguide/periodic-tasks.html)
 
  ```
 ## Usage
@@ -37,7 +37,7 @@ celery -A analyticreports beat -l info -S django
 * Create superuser `python manage.py createsuperuser` and login via django admin
 * Add Workspaces.
 * Add Intervals and Crontabs for when periodic tasks should run.
-* Add Periodic tasks getting the data.
+* Add Periodic tasks for getting the data.
 * Add Projects(groups for which to generate excel/pdf/emails). This can be done after getting the group data from
 rapidpro.
 * Add Periodic tasks for generating excel/pdf/email.
