@@ -5,7 +5,7 @@
     <title>Title</title>
 </head>
 <body>
-
+{% if projects.count > 0 %}
 {% for project in projects %}
 <ul>
 <li>
@@ -16,6 +16,9 @@
 </ul>
 
 {% endfor %}
+{% else %}
+    <h2>No Projects added Yet.</h2>
+{% endif %}
 
 </body>
 </html>
