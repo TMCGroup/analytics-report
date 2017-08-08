@@ -586,28 +586,28 @@ class Voice(models.Model):
     created_on = models.DateTimeField(null=True)
 
     @classmethod
-    def get_data(cls, proj):
-        url = "http://voice.tmcg.co.ug/~nicholas/data.php?project={0}".format(urllib2.quote(proj))
-        req = urllib2.Request(url)
-        response = urllib2.urlopen(req)
-        datas = json.load(response)
-        for data in datas:
+    def get_data(cls, project_name):
+        url = "http://voice.tmcg.co.ug/~nicholas/data.php?project={0}".format(urllib2.quote(project_name))
+        request = urllib2.Request(url)
+        response = urllib2.urlopen(request)
+        data_set = json.load(response)
+        for data in data_set:
             if cls.voice_id_exists(id=data['id']):
                 pass
             else:
                 urns = cls.clean_contact(data['phone_number'])
                 if Contact.urns_exists(number=urns):
                     uuid = hashlib.md5(data['created_at']).hexdigest()
-                    obj = Contact.objects.filter(urns=urns).first()
-                    pro = Project.objects.get(name=proj)
-                    cls.objects.create(id=data['id'], uuid=uuid, project=pro, contact=obj,
+                    contact = Contact.objects.filter(urns=urns).first()
+                    project = Project.objects.get(name=project_name)
+                    cls.objects.create(id=data['id'], uuid=uuid, project=project, contact=contact,
                                        reason=data['reason_for_call'],
                                        advice=data['advice_given'], created_by=data['created_by'],
                                        created_on=data['created_at'])
                 else:
                     pass
 
-        return datas
+        return data_set
 
     @classmethod
     def voice_id_exists(cls, id):

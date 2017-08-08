@@ -1,20 +1,13 @@
 import os
 import datetime as datetime
 import StringIO
-from django.conf import settings
 from django.core.mail import EmailMessage
-from analyticreports import settings
 from django.http import HttpResponse
 from django.shortcuts import render
-from django.template import RequestContext
-from .models import Contact, Message, Run, Flow, Group, Project, CampaignEvent, Campaign, Project, Voice, Email
-from django.template.loader import render_to_string
-from django.utils.timezone import now
-from itertools import chain
-from django.views.generic.base import View
+from .models import Contact, Message, Group, CampaignEvent, Project, Voice, Email
 import csv
-import json
 import datetime
+from reports.templatetags import report_tags
 
 
 def dashboard(request):
@@ -125,13 +118,15 @@ def export_to_csv(request, project_id):
     writer.writerow(['%s Contacts' % project.name])
     writer.writerow(['Contact Number', 'Contact Name', 'Group', 'Created on / Joined on'])
     for contact in contacts:
-        writer.writerow([contact.urns, contact.name, contact.groups, contact.created_on])
+        writer.writerow([contact.urns, contact.name,
+                         (contact_groups for contact_groups in report_tags.clean(contact.groups)), contact.created_on])
     writer.writerow([])
     writer.writerow([])
     writer.writerow(['%s Weekly Joined Contacts' % project.name])
     writer.writerow(['Contact Number', 'Contact Name', 'Group', 'Created on / Joined on'])
     for contact in weekly_contacts:
-        writer.writerow([contact.urns, contact.name, contact.groups, contact.created_on])
+        writer.writerow([contact.urns, contact.name,
+                         (contact_groups for contact_groups in report_tags.clean(contact.groups)), contact.created_on])
     writer.writerow([])
     writer.writerow([])
 
@@ -216,14 +211,16 @@ def send_csv_attachment_email(request, project_id):
     writer.writerow(['All %s Contacts' % project.name])
     writer.writerow(['Contact Number', 'Contact Name', 'Group(s)', 'Created on / Joined on'])
     for contact in contacts:
-        writer.writerow([contact.urns, contact.name, contact.groups, contact.created_on])
+        writer.writerow([contact.urns, contact.name,
+                         (contact_groups for contact_groups in report_tags.clean(contact.groups)), contact.created_on])
     writer.writerow([])
     writer.writerow([])
 
     writer.writerow(['%s Weekly Enrolled Contacts' % project.name])
     writer.writerow(['Contact Number', 'Contact Name', 'Group(s)', 'Created on / Joined on'])
     for contact in weekly_contacts:
-        writer.writerow([contact.urns, contact.name, contact.groups, contact.created_on])
+        writer.writerow([contact.urns, contact.name,
+                         (contact_groups for contact_groups in report_tags.clean(contact.groups)), contact.created_on])
     writer.writerow([])
     writer.writerow([])
 
@@ -281,13 +278,12 @@ def send_csv_attachment_email(request, project_id):
 
 
 def get_data_test(request):
-    data = Voice.get_data(proj="mCrag")
+    data = Voice.get_data(project_name="mCrag")
     lss = []
     for d in data:
         contact = d['phone_number']
         lss.append(contact)
 
-    return HttpResponse("Voice data added")
-    # return render(request, 'report/data.html', locals())
+    return render(request, 'report/data.html', locals())
 
 

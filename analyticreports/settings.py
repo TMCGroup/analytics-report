@@ -78,7 +78,7 @@ DATABASES = {
 
 
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'analytics_report',
+        'NAME': 'analytic_report_test',
         'USER': 'faith',
         'PASSWORD': '',
         'HOST': '',
