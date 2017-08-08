@@ -15,22 +15,21 @@ for purposes of reporting.
 ## Installation
 ```
 #clone the project.
-`git clone (project-link)`
+git clone (project-link)
 
 #Install requirements.
-`pip install requirements.pip`
+pip install requirements.pip
 
 #Run django server
-`python manage.py runserver`
+python manage.py runserver
 
 #Run the worker.
-  `celery worker -A analyticreports --loglevel=INFO`
+ celery worker -A analyticreports --loglevel=INFO
 	
 #Run the scheduler.
-`celery -A analyticreports beat -l info -S django`
+celery -A analyticreports beat -l info -S django
 	
-[ For more info on celery tasks ]
-( http://docs.celeryproject.org/en/latest/userguide/periodic-tasks.html )
+[ For more info on celery tasks ]( http://docs.celeryproject.org/en/latest/userguide/periodic-tasks.html )
 
  ```
 ## Usage
@@ -43,6 +42,6 @@ for purposes of reporting.
 rapidpro.
 * Add Periodic tasks for generating excel/pdf/email.
 * Add Emails.
-* Visit ( http://127.0.0.1:8000/home ) in your browser.
+* Visit http://127.0.0.1:8000/home in your browser.
 
 
