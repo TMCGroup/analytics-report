@@ -42,6 +42,6 @@ celery -A analyticreports beat -l info -S django
 rapidpro.
 * Add Periodic tasks for generating excel/pdf/email.
 * Add Emails.
-* Visit http://127.0.0.1:8000/home in your browser.
+* Visit http://127.0.0.1:8000/home.
 
 
