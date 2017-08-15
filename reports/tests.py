@@ -1,11 +1,10 @@
 import datetime
 
-from django.core.mail import EmailMessage
 from django.test import TestCase
-from .models import Contact, Message, Group, Run, Value, Flow, Workspace, Project, Email
 from django.utils import timezone
 from temba_client.v2 import TembaClient
-from django.conf import settings
+
+from .models import Contact, Message, Group, Run, Value, Flow, Workspace, Project, Email, Voice
 
 
 class DumpTest(TestCase):
@@ -14,6 +13,10 @@ class DumpTest(TestCase):
 
 
 class TestWorkspace(TestCase):
+    def setUp(self):
+        Contact.objects.create(uuid="abc4496b-f11f-4786-b967-db824f0c659c", urns="+256773435153",
+                               created_on=datetime.datetime.now(), modified_on=datetime.datetime.now())
+
     def test_get_rapidpro_workspaces(self):
         Workspace.objects.create(name='Test Workspace', host='hiwa.tmcg.co.ug',
                                  key='1da6d399139139812e2f949a64ce80264184996f')
@@ -235,3 +238,12 @@ class TestProject(TestCase):
 #         email_message.content_subtype = "html"
 #         email_message_test = Email.get_report_emails(project_id=project.id)
 #         self.assertEquals(email_message, email_message_test)
+
+class TestVoice(TestCase):
+
+    def test_get_data(self):
+        voice_count = Voice.objects.count()
+        added_voice = Voice.get_data(project_name="SMS MAAMA")
+
+        self.assertEquals(Voice.objects.count(), voice_count+added_voice)
+

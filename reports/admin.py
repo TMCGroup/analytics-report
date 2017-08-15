@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Contact, Group, Run, Flow, Message, Workspace, Project, CampaignEvent, Campaign, Voice, Email
+from .models import Contact, Group, Run, Flow, Message, Workspace, Project, CampaignEvent, Campaign, Voice, Email, Value
 
 
 class EmailAdmin(admin.ModelAdmin):
@@ -59,6 +59,10 @@ class RunAdmin(admin.ModelAdmin):
         'id', 'run_id', 'flow', 'contact', 'responded', 'exit_type', 'exited_on', 'created_on', 'modified_on')
     search_fields = ['run_id', 'contact', 'flow']
 
+class ValueAdmin(admin.ModelAdmin):
+    list_display = ('id', 'value_name', 'value', 'category', 'node', 'time', 'run_id')
+    search_fields = ['value', 'value_name']
+
 
 admin.site.register(Project, ProjectAdmin)
 admin.site.register(Voice, VoiceAdmin)
@@ -71,3 +75,4 @@ admin.site.register(Run, RunAdmin)
 admin.site.register(Flow, FlowAdmin)
 admin.site.register(Campaign)
 admin.site.register(CampaignEvent)
+admin.site.register(Value, ValueAdmin)

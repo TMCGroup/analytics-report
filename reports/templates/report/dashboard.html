@@ -1,24 +1,125 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
-{% if projects.count > 0 %}
-{% for project in projects %}
-<ul>
-<li>
-    <a href="{% url 'template_one' project.id %}">{{ project.name }}</a> &nbsp; &nbsp; <a href="{% url 'csv' project.id %}">
-    {{ project.name }} &nbsp;Download CSV</a>&nbsp; <a href="{% url 'email-csv' project.id %}">
-    {{ project.name }} &nbsp; Email CSV</a>
-</li>
-</ul>
+{% extends 'report/base.html' %}
+{% block title %}Analytics Report - TMCG {% endblock %}
+{% load nvd3_tags %}
 
-{% endfor %}
-{% else %}
-    <h2>No Projects added Yet.</h2>
-{% endif %}
+{% block chart %}
+    {% load_chart chart1_type chart1_data chart1_container extra %}
+{% endblock %}
 
-</body>
-</html>
+{% block content %}
+    <div class="row">
+    <div class="col-md-3 col-sm-6 col-xs-12">
+          <div class="info-box">
+            <span class="info-box-icon bg-aqua"><i class="fa fa-users"></i></span>
+
+            <div class="info-box-content">
+              <span class="info-box-text">Contacts</span>
+              <span class="info-box-number">{{ contacts.count }}</span>
+            </div>
+            <!-- /.info-box-content -->
+          </div>
+          <!-- /.info-box -->
+    </div>
+    <div class="col-md-3 col-sm-6 col-xs-12">
+          <div class="info-box">
+            <span class="info-box-icon bg-green"><i class="fa fa-envelope-o"></i></span>
+
+            <div class="info-box-content">
+              <span class="info-box-text">Incoming Texts</span>
+              <span class="info-box-number">{{ incoming_messages.count }}</span>
+            </div>
+            <!-- /.info-box-content -->
+          </div>
+          <!-- /.info-box -->
+    </div>
+    <div class="col-md-3 col-sm-6 col-xs-12">
+          <div class="info-box">
+            <span class="info-box-icon bg-green"><i class="fa  fa-envelope"></i></span>
+
+            <div class="info-box-content">
+              <span class="info-box-text">Outgoing Texts</span>
+              <span class="info-box-number">{{ outgoing_messages.count }}</span>
+            </div>
+            <!-- /.info-box-content -->
+          </div>
+          <!-- /.info-box -->
+    </div>
+    <div class="col-md-3 col-sm-6 col-xs-12">
+          <div class="info-box">
+            <span class="info-box-icon bg-yellow"><i class="fa fa-money"></i></span>
+
+            <div class="info-box-content">
+              <span class="info-box-text">Messages Cost</span>
+              <span class="info-box-number">{{ messages_cost }}<small>Shs</small></span>
+            </div>
+            <!-- /.info-box-content -->
+          </div>
+          <!-- /.info-box -->
+    </div>
+    </div>
+
+
+    <div class="row">
+    <div class="box">
+    <div class="box-header with-border">
+        <h3 class="box-title"> TMCG SMS Platform Summary</h3>
+    </div>
+    <div class="box-body">
+
+        {% include_container chart1_container  400 400 %}
+
+    </div>
+    <div class="box-footer">
+        <!-- Contacts summary -->
+              <div class="row">
+                <div class="col-sm-6 col-xs-6">
+                  <div class="description-block border-right">
+                    <span class="description-percentage text-green"><i class="fa fa-caret-up">
+                    </i> {{ percentage_registered_contacts }}%</span>
+                    <h5 class="description-header">{{ registered_contacts.count }}</h5>
+                    <span class="description-text">registered contacts</span>
+                  </div>
+                  <!-- /.description-block -->
+                </div>
+                <div class="col-sm-6 col-xs-6">
+                  <div class="description-block">
+                    <span class="description-percentage text-red"><i class="fa fa-caret-down"></i>
+                        {{ percentage_unregistered_contacts }}%</span>
+                    <h5 class="description-header">{{ unregistered_contacts.count }}</h5>
+                    <span class="description-text">unregistered contacts</span>
+                  </div>
+                  <!-- /.description-block -->
+                </div>
+              </div>
+              <!-- /.row -->
+
+        <!-- InComing Messages summary -->
+        <div class="row">
+                <div class="col-sm-6 col-xs-6">
+                  <div class="description-block border-right">
+                    <span class="description-percentage text-green"><i class="fa fa-caret-up">
+                    </i> {{ percentage_registered_contacts }}%</span>
+                    <h5 class="description-header">{{ registered_incoming_messages.count }}</h5>
+                    <span class="description-text">registered incoming messages</span>
+                  </div>
+                  <!-- /.description-block -->
+                </div>
+                <!-- /.col -->
+                <div class="col-sm-6 col-xs-6">
+                  <div class="description-block">
+                    <span class="description-percentage text-red"><i class="fa fa-caret-down"></i>
+                        {{ percentage_unregistered_contacts }}%</span>
+                    <h5 class="description-header">{{ unregistered_incoming_messages }}</h5>
+                    <span class="description-text">unregistered incoming messages</span>
+                  </div>
+                  <!-- /.description-block -->
+                </div>
+        </div>
+              <!-- /.row -->
+    </div>
+
+    </div>
+    </div>
+
+
+{% endblock %}

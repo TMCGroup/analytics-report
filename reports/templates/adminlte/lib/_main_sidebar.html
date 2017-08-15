@@ -1,0 +1,30 @@
+{% extends 'adminlte/lib/_main_sidebar.html' %}
+
+{% block nav_links %}
+    <li class="active">
+        <a href="{% url 'dashboard' %}">
+            <i class="fa fa-dashboard"></i> <span>Home</span>
+        </a>
+    </li>
+    {% if projects.count > 0 %}
+        {% for project in projects %}
+    <li class="treeview">
+        <a href="#">
+            <i class="fa fa-angle-left pull-right"></i>
+            <i class="fa fa-folder"></i> <span>{{ project.name }}</span>
+
+        </a>
+        <ul class="treeview-menu">
+            <li><a href="{% url 'template_one' project.id %}"><i class="fa fa-history"></i>
+                <span>{{ project.name }} Details</span></a></li>
+            <li><a href="{% url 'csv' project.id %}"><i class="fa fa-download"></i>
+                <span>Download CSV File</span></a></li>
+            <li><a href="{% url 'email-csv' project.id %}"><i class="fa fa-paper-plane"></i>
+                <span>Send Report Email</span></a></li>
+
+        </ul>
+
+    </li>
+        {% endfor %}
+    {% endif %}
+{% endblock nav_links %}

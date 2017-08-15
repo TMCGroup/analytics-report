@@ -1,0 +1,11 @@
+{% extends 'report/base.html' %}
+{% load nvd3_tags %}
+
+{% block chart %}{% load_chart charttype chartdata chartcontainer extra %}{% endblock %}
+
+{% block content %}
+<body>
+    <h1>Fruits vs Calories</h1>
+    {% include_container chartcontainer %}
+</body>
+{% endblock %}

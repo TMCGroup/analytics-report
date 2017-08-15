@@ -15,6 +15,11 @@ import os
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+APPLICATION_DIR = os.path.dirname(globals()['__file__'])
+
+PROJECT_ROOT = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), ".."),
+)
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.11/howto/deployment/checklist/
 
@@ -28,8 +33,9 @@ ALLOWED_HOSTS = []
 
 # Application definition
 
+# noinspection PyUnresolvedReferences,PyUnresolvedReferences,PyUnresolvedReferences,PyUnresolvedReferences,PyUnresolvedReferences,PyUnresolvedReferences
 INSTALLED_APPS = [
-    'django.contrib.admin',
+
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -37,7 +43,20 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django_nose',
     'django_celery_beat',
-    'reports'
+    'django_nvd3',
+    'djangobower',
+    # Any apps which will override adminlte's templates (i.e. your apps)
+    'reports',
+
+    # The general purpose templates
+    'django_adminlte',
+
+    # Optional: Skin for the admin interface
+    'django_adminlte_theme',
+
+    # Any apps which need to have their templates overridden by adminlte
+    'django.contrib.admin',
+
 ]
 
 MIDDLEWARE = [
@@ -120,8 +139,30 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
-
+# noinspection PyUnresolvedReferences
+STATIC_ROOT = os.path.join(PROJECT_ROOT, 'static')
 STATIC_URL = '/static/'
+
+# noinspection PyUnresolvedReferences
+BOWER_COMPONENTS_ROOT = os.path.join(APPLICATION_DIR, 'components')
+BOWER_PATH = '/usr/local/bin/bower'
+
+# noinspection PyUnresolvedReferences,PyUnresolvedReferences,PyUnresolvedReferences
+STATICFILES_FINDERS = [
+    'django.contrib.staticfiles.finders.FileSystemFinder',
+    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+    'djangobower.finders.BowerFinder',
+]
+
+# noinspection PyUnresolvedReferences,PyUnresolvedReferences
+BOWER_INSTALLED_APPS = [
+    'jquery',
+    'underscore',
+    'd3',
+    'nvd3'
+]
+
+# noinspection PyUnresolvedReferences
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
 
