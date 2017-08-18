@@ -1,0 +1,28 @@
+{% extends 'report/base.html' %}
+{% load static %}
+{% block title %}Weekly Voice Interactions - {{ project.name }} - Report View One - TMCG {% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div class="box">
+        <div class="box-header with-border">
+            <h3 class="box-title">All {{ project.name }} Weekly Voice Interactions</h3>
+        </div>
+        <div class="box-body">
+        <div class="container-fluid">
+                                <table class="striped" style="line-height: 12px">
+                        <tr><th>Contact Number</th><th>Reason for Call</th><th>Call Agent</th><th>Date</th></tr>
+                        {% for voice_interaction in voice_interactions %}
+                        <tr>
+                            <td>{{ voice_interaction.contact }}</td>
+                            <td>{{ voice_interaction.reason }}</td>
+                            <td>{{ voice_interaction.created_by }}</td>
+                            <td>{{ voice_interaction.created_by }}</td>
+                        </tr>
+                        {% endfor %}
+                    </table>
+        </div>
+        </div>
+        </div>
+    </div>
+{% endblock %}

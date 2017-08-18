@@ -7,8 +7,10 @@ from django.shortcuts import render, render_to_response
 from reports.templatetags import report_tags
 from .models import Contact, Message, Group, CampaignEvent, Project, Voice, Email
 from nvd3 import pieChart, cumulativeLineChart, discreteBarChart, scatterChart
+from django.views.decorators.cache import cache_page
 
 
+@cache_page(60 * 15)
 def dashboard(request):
     projects = Project.get_all_projects()
     groups = Group.get_all_groups()
@@ -32,9 +34,9 @@ def dashboard(request):
     messages_cost = Message.get_cost_of_incoming_messages(incoming_messages.count()) + Message. \
         get_cost_of_outgoing_messages(outgoing_messages.count())
     registered_incoming_messages = Message.get_all_specific_incoming_messages(registered_contacts_list)
-    # unregistered_incoming_messages = Message.get_all_specific_incoming_messages(unregistered_contacts_list)
-    unregistered_incoming_messages = incoming_messages.count() - registered_incoming_messages.count()
-    unregistered_incoming_messages_cost = Message.get_cost_of_incoming_messages(unregistered_incoming_messages)
+    unregistered_incoming_messages = Message.get_all_specific_incoming_messages(unregistered_contacts_list)
+    #unregistered_incoming_messages = incoming_messages.count() - registered_incoming_messages.count()
+    unregistered_incoming_messages_cost = Message.get_cost_of_incoming_messages(unregistered_incoming_messages.count())
     registered_incoming_messages_cost = Message.get_cost_of_incoming_messages(registered_incoming_messages.count())
 
     registered_contacts_set = registered_contacts.count()
@@ -68,13 +70,16 @@ def dashboard_nav(request):
     return render(request, 'adminlte/lib/_main_sidebar.html', locals())
 
 
+@cache_page(60 * 15)
 def report_template_one(request, project_id):
     projects = Project.get_all_projects()
     project = Project.objects.get(id=project_id)
     project_groups = project.group.all()
+    top_five_project_groups = project.group.all().order_by('-count')[:5]
     project_groups_count = project.group.count()
     project_group_list = Project.get_project(name=project.name)
     voice_platform = Voice.objects.filter(project=project).all()
+    top_five_voice_interactions = voice_platform.order_by('-date')[:5]
 
     group_list = []
     for group in project_groups:
@@ -82,6 +87,7 @@ def report_template_one(request, project_id):
 
     contacts = Contact.get_project_contacts(project_groups_list=group_list)
     weekly_contacts = Contact.get_weekly_project_contacts(project_groups_list=group_list)
+    top_five_weekly_contacts = weekly_contacts.order_by('-created_on')[:5]
     weekly_contacts_value_list = Contact.get_all_project_contacts_value_list(project_groups_list=group_list)
     weekly_contact_percentage = Contact.get_project_contacts_percentage(contact_variable=weekly_contacts.count(),
                                                                         project_groups_list=group_list)
@@ -97,7 +103,9 @@ def report_template_one(request, project_id):
     weekly_sent_messages = Message.get_weekly_sent_messages(contact_urns_list)
     weekly_delivered_messages = Message.get_weekly_delivered_messages(contact_urns_list)
     weekly_failed_messages = Message.get_weekly_failed_messages(contact_urns_list)
+    top_five_weekly_failed_messages = weekly_failed_messages.order_by('-sent_on')[:5]
     weekly_hanging_messages = Message.get_weekly_hanging_messages(contact_urns_list)
+    top_five_weekly_hanging_messages = weekly_hanging_messages.order_by('-sent_on')[:5]
     weekly_campaign_events = CampaignEvent.get_campaign_event()
     groups = Group.get_all_groups()
     percentage_weekly_delivered_messages = Message.get_project_weekly_messages_percentage(
@@ -153,6 +161,76 @@ def report_template_one(request, project_id):
     return render(request, 'report/template_one.html', locals())
 
 
+@cache_page(60 * 15)
+def view_all_project_groups(request, project_id):
+    projects = Project.get_all_projects()
+    project = Project.objects.get(id=project_id)
+    project_groups = project.group.all()
+
+    return render(request, 'report/project_groups.html', locals())
+
+
+@cache_page(60 * 15)
+def view_all_project_weekly_contacts(request, project_id):
+    projects = Project.get_all_projects()
+    project = Project.objects.get(id=project_id)
+    project_groups = project.group.all()
+    group_list = []
+    for group in project_groups:
+        group_list.append(group.name)
+
+    contacts = Contact.get_project_contacts(project_groups_list=group_list)
+    weekly_contacts = Contact.get_weekly_project_contacts(project_groups_list=group_list)
+
+    return render(request, 'report/weekly_project_contacts.html', locals())
+
+
+@cache_page(60 * 15)
+def view_all_project_weekly_failed_messages(request, project_id):
+    projects = Project.get_all_projects()
+    project = Project.objects.get(id=project_id)
+    project_groups = project.group.all()
+    group_list = []
+    for group in project_groups:
+        group_list.append(group.name)
+
+    contacts = Contact.get_project_contacts(project_groups_list=group_list)
+    weekly_contacts = Contact.get_weekly_project_contacts(project_groups_list=group_list)
+    contact_urns_list = []
+    for contact in contacts:
+        contact_urns_list.append(contact.urns)
+
+    weekly_failed_messages = Message.get_weekly_failed_messages(contact_urns_list)
+
+    return render(request, 'report/weekly_project_failed_messages.html', locals())
+
+
+@cache_page(60 * 15)
+def view_all_project_weekly_hanging_messages(request, project_id):
+    projects = Project.get_all_projects()
+    project = Project.objects.get(id=project_id)
+    project_groups = project.group.all()
+    group_list = []
+    for group in project_groups:
+        group_list.append(group.name)
+
+    contacts = Contact.get_project_contacts(project_groups_list=group_list)
+    weekly_contacts = Contact.get_weekly_project_contacts(project_groups_list=group_list)
+    contact_urns_list = []
+    for contact in contacts:
+        contact_urns_list.append(contact.urns)
+
+    weekly_hanging_messages = Message.get_weekly_hanging_messages(contact_urns_list)
+
+    return render(request, 'report/weekly_project_hanging_messages.html', locals())
+
+
+def view_all_project_weekly_voice_interactions(request, project_id):
+    project = Project.objects.get(id=project_id)
+    voice_interactions = Voice.objects.filter(project=project).all()
+    return render(request, 'report/weekly_project_voice_interactions.html', locals())
+
+
 def report_template_one_pdf(request, project_id):
     project = Project.objects.get(id=project_id)
     project_groups = project.group.all()
@@ -180,11 +258,11 @@ def report_template_one_pdf(request, project_id):
     weekly_hanging_messages = Message.get_weekly_hanging_messages(contact_urns_list)
     weekly_unread_messages = Message.get_weekly_unread_messages(contact_urns_list)
     weekly_campaign_events = CampaignEvent.get_campaign_event()
-    groups = Group.get_all_groups()
 
     return render(request, 'report/my-pdf.html', locals())
 
 
+@cache_page(60 * 15)
 def export_to_csv(request, project_id):
     project = Project.objects.get(id=project_id)
     voice_platform = Voice.objects.filter(project=project).all()
@@ -281,6 +359,7 @@ def export_to_csv(request, project_id):
     return response
 
 
+@cache_page(60 * 15)
 def send_csv_attachment_email(request, project_id):
     csv_file = StringIO.StringIO()
 

@@ -137,7 +137,7 @@
         <div class="container-fluid">
                 <table class="striped" style="line-height: 12px">
                     <tr><th>Group Name</th><th>Number of Contacts</th></tr>
-                    {% for group in project_groups %}
+                    {% for group in top_five_project_groups %}
                     <tr>
                         <td>{{ group.name }}</td>
                         <td>{{ group.count }}</td>
@@ -145,15 +145,18 @@
                     {% endfor %}
                 </table>
         </div>
-
         </div>
+        {% if project_groups.count > 5 %}
         <div class="box-footer clearfix no-border">
-            ----  Pagination ------<button type="button" class="btn btn-default pull-right"><i class="fa fa-plus"></i>
-            Page 1</button>
+            <a href="{% url 'all-project-groups' project.id %}" type="button"
+                    class="btn btn-default pull-right"><i class="fa fa-arrow-circle-right"></i>
+            View All Groups</a>
         </div>
+        {% endif %}
         </div>
     </div>
     {% endif %}
+
     {% if weekly_contacts.count > 0 %}
     <div class="col-lg-6 col-md-6 col-sm-3 col-xs-6">
         <div class="box">
@@ -164,7 +167,7 @@
         <div class="container-fluid">
                 <table class="striped" style="line-height: 12px">
                     <tr><th>Name</th><th>Number</th><th>Groups</th><th>Created On</th></tr>
-                    {% for contact in weekly_contacts %}
+                    {% for contact in top_five_weekly_contacts %}
                     <tr>
                         <td>{{ contact.name }}</td>
                         <td>{{ contact.urns }}</td>
@@ -175,13 +178,14 @@
                     {% endfor %}
                 </table>
         </div>
-
         </div>
+        {% if weekly_contacts.count > 5 %}
         <div class="box-footer clearfix no-border">
-            ----  Pagination ------<button type="button" class="btn btn-default pull-right"><i class="fa fa-plus"></i>
-            Page 1</button>
+            <a href="{% url 'all-project-weekly-contacts' project.id %}" type="button"
+                    class="btn btn-default pull-right"><i class="fa fa-arrow-circle-right"></i>
+            View All Weekly Enrolled Contacts</a>
         </div>
-
+        {% endif %}
         </div>
     </div>
     {% endif %}
@@ -202,7 +206,7 @@
 
                     <table class="striped" style="line-height: 12px">
                         <tr><th>Contact Number</th><th>Text</th><th>Sent On</th></tr>
-                        {% for weekly_failed_message in weekly_failed_messages %}
+                        {% for weekly_failed_message in top_five_weekly_failed_messages %}
                         <tr>
                             <td>{{ weekly_failed_message.urn }}</td>
                             <td>{{ weekly_failed_message.text }}</td>
@@ -212,13 +216,13 @@
                     </table>
 
             </div>
-
             </div>
+            {% if weekly_failed_messages.count > 5  %}
             <div class="box-footer clearfix no-border">
-                ----  Pagination ------<button type="button" class="btn btn-default pull-right"><i class="fa fa-plus"></i>
-                Page 1</button>
+                <a href="{% url 'all-project-weekly-failed-messages' project.id %}" type="button" class="btn btn-default pull-right"><i class="fa fa-arrow-circle-right"></i>
+                View All Weekly Failed Messages</a>
             </div>
-
+            {% endif %}
             </div>
         </div>
     {% endif %}
@@ -234,7 +238,7 @@
 
                     <table class="striped" style="line-height: 12px">
                         <tr><th>Contact Number</th><th>Text</th><th>Sent On</th></tr>
-                        {% for weekly_hanging_message in weekly_hanging_messages %}
+                        {% for weekly_hanging_message in top_five_weekly_hanging_messages %}
                         <tr>
                             <td>{{ weekly_hanging_message.urn }}</td>
                             <td>{{ weekly_hanging_message.text }}</td>
@@ -244,45 +248,46 @@
                     </table>
 
             </div>
-
             </div>
+            {% if weekly_hanging_messages.count > 5 %}
             <div class="box-footer clearfix no-border">
-                ----  Pagination ------<button type="button" class="btn btn-default pull-right"><i class="fa fa-plus"></i>
-                Page 1</button>
+               <a href="{% url 'all-project-weekly-hanging-messages' project.id %}" type="button" class="btn btn-default pull-right"><i class="fa fa-arrow-circle-right"></i>
+                View All Weekly Hanging messages</a>
             </div>
-
+            {% endif %}
             </div>
         </div>
     {% endif %}
 
-   {% if weekly_hanging_messages.count > 0 %}
+   {% if voice_platform.count > 0 %}
         <div class="row">
             <div class="box">
             <div class="box-header with-border">
-                <h3 class="box-title">{{ project.name }} Weekly Hanging Messages</h3>
+                <h3 class="box-title">{{ project.name }} Weekly Voice Interactions</h3>
             </div>
             <div class="box-body">
             <div class="container-fluid">
 
                     <table class="striped" style="line-height: 12px">
-                        <tr><th>Contact Number</th><th>Text</th><th>Sent On</th></tr>
-                        {% for weekly_hanging_message in weekly_hanging_messages %}
+                        <tr><th>Contact Number</th><th>Reason for Call</th><th>Call Agent</th><th>Date</th></tr>
+                        {% for voice_interaction in top_five_voice_interactions %}
                         <tr>
-                            <td>{{ weekly_hanging_message.urn }}</td>
-                            <td>{{ weekly_hanging_message.text }}</td>
-                            <td>{{ weekly_hanging_message.sent_on }}</td>
+                            <td>{{ voice_interaction.contact }}</td>
+                            <td>{{ voice_interaction.reason }}</td>
+                            <td>{{ voice_interaction.created_by }}</td>
+                            <td>{{ voice_interaction.created_by }}</td>
                         </tr>
                         {% endfor %}
                     </table>
 
             </div>
-
             </div>
+            {% if voice_platform.count > 5 %}
             <div class="box-footer clearfix no-border">
-                ----  Pagination ------<button type="button" class="btn btn-default pull-right"><i class="fa fa-plus"></i>
-                Page 1</button>
+                <a href="{% url 'all-project-weekly-voice-interactions' project.id %}" type="button" class="btn btn-default pull-right"><i class="fa fa-arrow-circle-right"></i>
+                View All Voice Interactions</a>
             </div>
-
+            {% endif %}
             </div>
         </div>
     {% endif %}
@@ -292,21 +297,4 @@
 {% endfor %} <!-- ending starting for loop project groups specific -->
 {% endblock %}
 
-{#<h1>Weekly Voice</h1>#}
-{#<table>#}
-{#<tr>#}
-{#<th>Contact</th>#}
-{#<th>Reason for call</th>#}
-{#<th>Created by</th>#}
-{#<th>Date</th>#}
-{#</tr>#}
-{#{% for c in voice_platform %}#}
-{#    <tr>#}
-{#    <td style="padding-right: 10px">{{ c.contact }}</td>#}
-{#    <td style="padding-right: 10px">{{ c.reason }}</td>#}
-{#    <td style="padding-right: 10px">{{ c.created_by }}</td>#}
-{#    <td style="padding-right: 10px">{{ c.created_on }}</td>#}
-{#    </tr>#}
-{#{% endfor %}#}
-{#</table>#}
 

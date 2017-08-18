@@ -1,0 +1,30 @@
+{% extends 'report/base.html' %}
+{% load static %}
+{% load report_tags %}
+{% block title %}Weekly New Contacts - {{ project.name }} - Report View One - TMCG {% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div class="box">
+        <div class="box-header with-border">
+            <h3 class="box-title">All {{ project.name }} Weekly Contacts</h3>
+        </div>
+        <div class="box-body">
+        <div class="container-fluid">
+            <table class="striped" style="line-height: 12px">
+                    <tr><th>Name</th><th>Number</th><th>Groups</th><th>Created On</th></tr>
+                    {% for contact in weekly_contacts %}
+                    <tr>
+                        <td>{{ contact.name }}</td>
+                        <td>{{ contact.urns }}</td>
+                        <td>{% clean contact.groups as groups %}{% for g in groups %}<ul><li>{{ g }}</li></ul>
+                        {% endfor %}</td>
+                        <td>{{ contact.created_on }}</td>
+                    </tr>
+                    {% endfor %}
+                </table>
+        </div>
+        </div>
+        </div>
+    </div>
+{% endblock %}

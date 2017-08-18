@@ -28,14 +28,14 @@ class Workspace(models.Model):
 
     @classmethod
     def get_rapidpro_workspaces(cls):
-        workspaces = cls.objects.all()
+        workspaces = cls.objects.filter(key='ed4a8994793c72430afdc050f101aa4b604ed8aa').all()
         for workspace in workspaces:
             client = TembaClient(workspace.host, workspace.key)
             Group.add_groups(client=client)
             Contact.save_contacts(client=client)
             Message.save_messages(client=client)
             Flow.add_flows(client=client)
-            Run(client=client)
+            Run.add_runs(client=client)
             Campaign.add_campaigns(client=client)
             CampaignEvent.add_campaign_events(client=client)
 
@@ -111,14 +111,16 @@ class Project(models.Model):
 class Contact(models.Model):
     uuid = models.CharField(max_length=100)
     name = models.CharField(max_length=100, null=True, blank=True)
-    language = models.CharField(max_length=50, null=True)
-    urns = models.CharField(max_length=100)
+    language = models.CharField(max_length=50, null=True, blank=True)
+    urns = models.CharField(max_length=100, null=True, blank=True)
     groups = models.TextField(null=True, blank=True)
     fields = models.TextField(null=True, blank=True)
     blocked = models.BooleanField(default=False)
     stopped = models.BooleanField(default=False)
     created_on = models.DateTimeField(null=True)
     modified_on = models.DateTimeField(null=True)
+    created_at = models.DateTimeField(auto_now=False, auto_now_add=True)
+    modified_at = models.DateTimeField(auto_now=True, auto_now_add=False)
 
     @classmethod
     def save_contacts(cls, client):
@@ -284,6 +286,8 @@ class Message(models.Model):
     created_on = models.DateTimeField(auto_now_add=True, editable=False)
     sent_on = models.DateTimeField(null=True, blank=True)
     modified_on = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now=False, auto_now_add=True)
+    modified_at = models.DateTimeField(auto_now=True, auto_now_add=False)
 
     class Meta:
         ordering = ['-created_on', ]
@@ -296,39 +300,33 @@ class Message(models.Model):
             for message_batch in client.get_messages(folder=folder).iterfetches(retry_on_rate_exceed=True):
                 for message in message_batch:
                     if not cls.message_exists(message):
-                        contact = Contact.objects.get(uuid=message.contact.uuid)
-                        if Contact.contact_exists(contact):
+                        if not Contact.objects.filter(uuid=message.contact.uuid).exists():
+                            contact = Contact.objects.create(uuid=message.contact.uuid, name=message.contact.name,
+                                                             urns=cls.clean_message_urn(message),
+                                                             )
                             cls.objects.create(msg_id=message.id, broadcast=message.broadcast, contact=contact,
-                                               urn=cls.clean_msg_contacts(message), channel=message.channel,
+                                               urn=cls.clean_message_urn(message), channel=message.channel,
                                                direction=message.direction,
                                                type=message.type, status=message.status, visibility=message.visibility,
                                                text=message.text, labels=message.labels, created_on=message.created_on,
                                                sent_on=message.sent_on, modified_on=message.modified_on)
                             added += 1
                         else:
-                            contact = Contact.objects.create(uuid=message.contact.uuid, name=message.contact.name,
-                                                             language=message.contact.language,
-                                                             fields=message.contact.fields,
-                                                             groups=message.contact.groups,
-                                                             created_on=message.contact.created_on,
-                                                             modified_on=message.contact.modified_on,
-                                                             urns=message.contact.urns,
-                                                             blocked=message.contact.blocked,
-                                                             stopped=message.contact.stopped)
+                            contact = Contact.objects.get(uuid=message.contact.uuid)
                             cls.objects.create(msg_id=message.id, broadcast=message.broadcast, contact=contact,
-                                               urn=cls.clean_msg_contacts(message), channel=message.channel,
+                                               urn=cls.clean_message_urn(message), channel=message.channel,
                                                direction=message.direction,
                                                type=message.type, status=message.status, visibility=message.visibility,
                                                text=message.text, labels=message.labels, created_on=message.created_on,
                                                sent_on=message.sent_on, modified_on=message.modified_on)
                             added += 1
-                    else:  # cater for update in status mainly for hanging messages taking 48hours delivery receipt
-                        Message.objects.filter(msg_id=message.id).update(broadcast=message.broadcast,
-                                                                         channel=message.channel,
-                                                                         direction=message.direction,
-                                                                         type=message.type, status=message.status,
-                                                                         visibility=message.visibility,
-                                                                         modified_on=message.modified_on)
+                            # else:  # cater for update in status mainly for hanging messages taking 48hours delivery receipt
+                            #     Message.objects.filter(msg_id=message.id).update(broadcast=message.broadcast,
+                            #                                                      channel=message.channel,
+                            #                                                      direction=message.direction,
+                            #                                                      type=message.type, status=message.status,
+                            #                                                      visibility=message.visibility,
+                            #                                                      modified_on=message.modified_on)
 
         return added
 
@@ -442,11 +440,11 @@ class Message(models.Model):
             return "No project contacts yet"
 
     @classmethod
-    def clean_msg_contacts(cls, msg):
-        if 'tel:' in msg.urn:
-            return msg.urn[4:]
+    def clean_message_urn(cls, message):
+        if 'tel:' in message.urn:
+            return message.urn[4:]
         else:
-            return msg.urn
+            return message.urn
 
     def __unicode__(self):
         return self.urn
@@ -455,12 +453,14 @@ class Message(models.Model):
 class Flow(models.Model):
     uuid = models.CharField(max_length=100)
     name = models.CharField(max_length=100)
-    expires = models.IntegerField()
+    expires = models.IntegerField(null=True)
     active_runs = models.IntegerField(null=True)
     complete_runs = models.IntegerField(null=True)
     interrupted_runs = models.IntegerField(null=True)
     expired_runs = models.IntegerField(null=True)
-    created_on = models.DateTimeField()
+    created_on = models.DateTimeField(null=True)
+    created_at = models.DateTimeField(auto_now=False, auto_now_add=True)
+    modified_at = models.DateTimeField(auto_now=True, auto_now_add=False)
 
     @classmethod
     def add_flows(cls, client):
@@ -496,6 +496,8 @@ class Campaign(models.Model):
     name = models.CharField(max_length=100)
     group = models.CharField(max_length=200, blank=True, null=True)
     created_on = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now=False, auto_now_add=True)
+    modified_at = models.DateTimeField(auto_now=True, auto_now_add=False)
 
     @classmethod
     def add_campaigns(cls, client):
@@ -531,6 +533,8 @@ class CampaignEvent(models.Model):
     message = models.TextField(blank=True, null=True)
     flow = models.CharField(max_length=200, blank=True, null=True)
     created_on = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now=False, auto_now_add=True)
+    modified_at = models.DateTimeField(auto_now=True, auto_now_add=False)
 
     class Meta:
         ordering = ['-created_on', ]
@@ -579,6 +583,8 @@ class Run(models.Model):
     exited_on = models.DateTimeField(null=True)
     created_on = models.DateTimeField()
     modified_on = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now=False, auto_now_add=True)
+    modified_at = models.DateTimeField(auto_now=True, auto_now_add=False)
 
     @classmethod
     def add_runs(cls, client):
@@ -586,9 +592,10 @@ class Run(models.Model):
         for run_batch in client.get_runs().iterfetches(retry_on_rate_exceed=True):
             for run in run_batch:
                 if not cls.run_exists(run):
-                    contact = Contact.objects.get(uuid=run.contact.uuid)
-                    flow = Flow.objects.get(uuid=run.flow.uuid)
-                    if Contact.contact_exists(contact) & Flow.flow_exists(flow):
+                    if not (Contact.objects.filter(uuid=run.contact.uuid).exists() & Flow.objects.filter
+                                    (uuid=run.flow.uuid).exists()):
+                        contact = Contact.objects.create(uuid=run.contact.uuid, name=run.contact.name)
+                        flow = Flow.objects.create(uuid=run.flow.uuid, name=run.flow.name)
                         run_instance = cls.objects.create(run_id=run.id, flow=flow, contact=contact,
                                                           responded=run.responded,
                                                           exit_type=run.exit_type, exited_on=run.exited_on,
@@ -596,17 +603,8 @@ class Run(models.Model):
                         added += 1
                         Value.add_values(run=run_instance, values=run.values)
                     else:
-                        contact = Contact.objects.create(uuid=run.contact.uuid, name=run.contact.name,
-                                                         language=run.contact.language, fields=run.contact.fields,
-                                                         groups=run.contact.groups, created_on=run.contact.created_on,
-                                                         modified_on=run.contact.modified_on, urns=run.contact.urns,
-                                                         blocked=run.contact.blocked, stopped=run.contact.stopped)
-                        flow = Flow.objects.create(uuid=run.flow.uuid, name=run.flow.name, expires=run.flow.expires,
-                                                   active_runs=run.flow.active_runs,
-                                                   complete_runs=run.flow.complete_runs,
-                                                   interrupted_runs=run.flow.interrupted_runs,
-                                                   expired_runs=run.flow.expired_runs, created_on=run.flow.created_on)
-
+                        contact = Contact.objects.filter(uuid=run.contact.uuid).first()
+                        flow = Flow.objects.filter(uuid=run.flow.uuid).first()
                         run_instance = cls.objects.create(run_id=run.id, flow=flow, contact=contact,
                                                           responded=run.responded,
                                                           exit_type=run.exit_type, exited_on=run.exited_on,
@@ -631,6 +629,8 @@ class Value(models.Model):
     node = models.CharField(max_length=100, blank=True, null=True)
     time = models.DateTimeField(blank=True, null=True)
     run = models.ForeignKey(Run, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now=False, auto_now_add=True)
+    modified_at = models.DateTimeField(auto_now=True, auto_now_add=False)
 
     def __unicode__(self):
         return self.value

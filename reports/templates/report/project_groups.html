@@ -1,0 +1,26 @@
+{% extends 'report/base.html' %}
+{% load static %}
+{% block title %}Groups - {{ project.name }} - Report View One - TMCG {% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div class="box">
+        <div class="box-header with-border">
+            <h3 class="box-title">All {{ project.name }} Groups</h3>
+        </div>
+        <div class="box-body">
+        <div class="container-fluid">
+                <table class="striped" style="line-height: 12px">
+                    <tr><th>Group Name</th><th>Number of Contacts</th></tr>
+                    {% for group in project_groups %}
+                    <tr>
+                        <td>{{ group.name }}</td>
+                        <td>{{ group.count }}</td>
+                    </tr>
+                    {% endfor %}
+                </table>
+        </div>
+        </div>
+        </div>
+    </div>
+{% endblock %}

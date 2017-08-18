@@ -1,0 +1,27 @@
+{% extends 'report/base.html' %}
+{% load static %}
+{% block title %}Weekly Failed Messages - {{ project.name }} - Report View One - TMCG {% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div class="box">
+        <div class="box-header with-border">
+            <h3 class="box-title">All {{ project.name }} Weekly Failed Messages</h3>
+        </div>
+        <div class="box-body">
+        <div class="container-fluid">
+            <table class="striped" style="line-height: 12px">
+                        <tr><th>Contact Number</th><th>Text</th><th>Sent On</th></tr>
+                        {% for weekly_failed_message in weekly_failed_messages %}
+                        <tr>
+                            <td>{{ weekly_failed_message.urn }}</td>
+                            <td>{{ weekly_failed_message.text }}</td>
+                            <td>{{ weekly_failed_message.sent_on }}</td>
+                        </tr>
+                        {% endfor %}
+            </table>
+        </div>
+        </div>
+        </div>
+    </div>
+{% endblock %}

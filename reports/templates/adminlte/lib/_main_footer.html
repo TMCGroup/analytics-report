@@ -1,0 +1,17 @@
+{% extends 'adminlte/lib/_main_footer.html' %}
+{% load static %}
+
+{% block footer_right %}
+    <b>Version</b> {% block version %}1.0{% endblock %}
+{% endblock %}
+
+{% block footer_left %}
+    {% block legal %}
+    <strong>&copy; {% now "Y" %} <a href="http://{{ site.domain }}">Analytics Report.</a> &nbsp;
+{#        {% if not site %}.{% endif %}#}
+{#        {% if site %}#}
+{#            <a href="http://{{ site.domain }}">Analytics Report</a>#}
+{#        {% endif %}#} <!-- look into site model -->
+    </strong> All rights reserved.
+    {% endblock %}
+{% endblock %}
