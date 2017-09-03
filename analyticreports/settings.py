@@ -171,8 +171,8 @@ MEDIA_URL = '/media/'
 #  For Gmail or Google Apps
 EMAIL_USE_TLS = True
 EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_HOST_USER = ''
-EMAIL_HOST_PASSWORD = ''
+EMAIL_HOST_USER = 'faithnassiwa@gmail.com'
+EMAIL_HOST_PASSWORD = 'bebjkpjgtwlwtoll'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 DEFAULT_FROM_EMAIL = 'Preferably use TMCGs info Email <faithnassiwa@gmail.com>'

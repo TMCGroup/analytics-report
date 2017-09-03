@@ -28,7 +28,7 @@ class Workspace(models.Model):
 
     @classmethod
     def get_rapidpro_workspaces(cls):
-        workspaces = cls.objects.filter(key='ed4a8994793c72430afdc050f101aa4b604ed8aa').all()
+        workspaces = cls.objects.all()
         for workspace in workspaces:
             client = TembaClient(workspace.host, workspace.key)
             Group.add_groups(client=client)
@@ -401,8 +401,8 @@ class Message(models.Model):
         if len(contacts_list) > 0:
             query = reduce(operator.or_, (Q(urn__contains=contact) for contact in contacts_list))
             date_diff = datetime.datetime.now() - datetime.timedelta(days=7)
-            return cls.objects.filter(query, direction='out', sent_on__range=(date_diff, datetime.datetime.now()),
-                                      status='wired').all()
+            return cls.objects.filter(query, direction='out', sent_on__range=(date_diff, datetime.datetime.now()))\
+                .exclude(status__in=['delivered', 'failed']).all()
         else:
             return "No project contacts yet"
 
@@ -429,7 +429,7 @@ class Message(models.Model):
         if len(contacts_list) > 0:
             project_weekly_sent_messages_total = cls.get_weekly_sent_messages(contacts_list).count()
             if message_variable > 0:
-                return round(float(message_variable) / float(project_weekly_sent_messages_total) * 100, 2)
+                return str(round(float(message_variable) / float(project_weekly_sent_messages_total) * 100, 1)) + "%"
             elif message_variable == 0:
                 return 0
             elif project_weekly_sent_messages_total == 0:
@@ -678,8 +678,13 @@ class Email(models.Model):
         report_datetime = datetime.datetime.now()
 
         email_subject = '%s Weekly ( %s ) Report' % (project.name, report_datetime)
-        email_body = '<h4>Please find attached the weekly report.</h4>'
-        email_message = EmailMessage(email_subject, email_body, settings.EMAIL_HOST_USER, mailing_list)
+        email_body = '<br> Hello,  ' \
+                     '<br>Please find attached the weekly report.' \
+                     '<br>Regards, <br> TMCG Team'
+
+        email_message = EmailMessage(email_subject, email_body, settings.EMAIL_HOST_USER, ['faithnassiwa@gmail.com',
+                                                                                           'faith.nassiwa@tmcg.co.ug',
+                                                                                           'faithnashaba@gmail.com'])
         # email_message.attach_file(pdf_file)
         # email_message.attach_file(csv_file, 'text/csv') ## Had issues attaching csv file generated from the view
         email_message.content_subtype = "html"
@@ -699,6 +704,9 @@ class Voice(models.Model):
     created_by = models.CharField(max_length=100)
     created_on = models.DateTimeField(null=True)
 
+    def __unicode__(self):
+        return str(self.project)
+
     @classmethod
     def get_data(cls, project_name):
         url = "http://voice.tmcg.co.ug/~nicholas/data.php?project={0}".format(urllib2.quote(project_name))
@@ -709,7 +717,7 @@ class Voice(models.Model):
             if cls.voice_id_exists(id=data['id']):
                 pass
             else:
-                urns = cls.clean_contact(data['phone_number'])
+                urns = cls.clean_contact(data['phone'])
                 if Contact.urns_exists(number=urns):
                     uuid = hashlib.md5(data['created_at']).hexdigest()
                     contact = Contact.objects.filter(urns=urns).first()
@@ -740,5 +748,7 @@ class Voice(models.Model):
             pass
         return c
 
-    def __unicode__(self):
-        return str(self.project)
+    @classmethod
+    def get_weekly_voice_interaction(cls, project):
+        date_diff = datetime.datetime.now() - datetime.timedelta(days=7)
+        return cls.objects.filter(created_on__range=(date_diff, datetime.datetime.now()), project=project).all()

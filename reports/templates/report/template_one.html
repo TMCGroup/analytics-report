@@ -74,6 +74,9 @@
         </div>
         <div class="col-md-6 col-sm-6 col-xs-6">
             {% include_container chart2_container  400 400 %}
+            <br>{{ x2_data }}
+            <br>{{ y2_data }}
+            <br>{{ y2_data1 }}
         </div>
 
     </div>
@@ -124,73 +127,6 @@
 
     </div>
     </div>
-
-
-    <div class="row">
-    {% if project_groups_count > 0 %}
-    <div class="col-lg-6 col-md-6 col-sm-3 col-xs-6">
-        <div class="box">
-        <div class="box-header with-border">
-            <h3 class="box-title">{{ project.name }} Groups</h3>
-        </div>
-        <div class="box-body">
-        <div class="container-fluid">
-                <table class="striped" style="line-height: 12px">
-                    <tr><th>Group Name</th><th>Number of Contacts</th></tr>
-                    {% for group in top_five_project_groups %}
-                    <tr>
-                        <td>{{ group.name }}</td>
-                        <td>{{ group.count }}</td>
-                    </tr>
-                    {% endfor %}
-                </table>
-        </div>
-        </div>
-        {% if project_groups.count > 5 %}
-        <div class="box-footer clearfix no-border">
-            <a href="{% url 'all-project-groups' project.id %}" type="button"
-                    class="btn btn-default pull-right"><i class="fa fa-arrow-circle-right"></i>
-            View All Groups</a>
-        </div>
-        {% endif %}
-        </div>
-    </div>
-    {% endif %}
-
-    {% if weekly_contacts.count > 0 %}
-    <div class="col-lg-6 col-md-6 col-sm-3 col-xs-6">
-        <div class="box">
-        <div class="box-header with-border">
-            <h3 class="box-title">{{ project.name }} Weekly Enrolled Contacts</h3>
-        </div>
-        <div class="box-body">
-        <div class="container-fluid">
-                <table class="striped" style="line-height: 12px">
-                    <tr><th>Name</th><th>Number</th><th>Groups</th><th>Created On</th></tr>
-                    {% for contact in top_five_weekly_contacts %}
-                    <tr>
-                        <td>{{ contact.name }}</td>
-                        <td>{{ contact.urns }}</td>
-                        <td>{% clean contact.groups as groups %}{% for g in groups %}<ul><li>{{ g }}</li></ul>
-                        {% endfor %}</td>
-                        <td>{{ contact.created_on }}</td>
-                    </tr>
-                    {% endfor %}
-                </table>
-        </div>
-        </div>
-        {% if weekly_contacts.count > 5 %}
-        <div class="box-footer clearfix no-border">
-            <a href="{% url 'all-project-weekly-contacts' project.id %}" type="button"
-                    class="btn btn-default pull-right"><i class="fa fa-arrow-circle-right"></i>
-            View All Weekly Enrolled Contacts</a>
-        </div>
-        {% endif %}
-        </div>
-    </div>
-    {% endif %}
-    </div>
-
 
 {% if number_of_contacts > 0 %} <!-- Very important line to prevent breaking when the contact list for getting messages
                                 is empty -->
@@ -275,7 +211,7 @@
                             <td>{{ voice_interaction.contact }}</td>
                             <td>{{ voice_interaction.reason }}</td>
                             <td>{{ voice_interaction.created_by }}</td>
-                            <td>{{ voice_interaction.created_by }}</td>
+                            <td>{{ voice_interaction.created_on }}</td>
                         </tr>
                         {% endfor %}
                     </table>
@@ -293,6 +229,73 @@
     {% endif %}
 
 {% endif %} <!-- closing the very important contacts list count used in messages -->
+
+    <div class="row">
+    {% if project_groups_count > 0 %}
+    <div class="col-lg-6 col-md-6 col-sm-3 col-xs-6">
+        <div class="box">
+        <div class="box-header with-border">
+            <h3 class="box-title">{{ project.name }} Groups</h3>
+        </div>
+        <div class="box-body">
+        <div class="container-fluid">
+                <table class="striped" style="line-height: 12px">
+                    <tr><th>Group Name</th><th>Number of Contacts</th></tr>
+                    {% for group in top_five_project_groups %}
+                    <tr>
+                        <td>{{ group.name }}</td>
+                        <td>{{ group.count }}</td>
+                    </tr>
+                    {% endfor %}
+                </table>
+        </div>
+        </div>
+        {% if project_groups.count > 5 %}
+        <div class="box-footer clearfix no-border">
+            <a href="{% url 'all-project-groups' project.id %}" type="button"
+                    class="btn btn-default pull-right"><i class="fa fa-arrow-circle-right"></i>
+            View All Groups</a>
+        </div>
+        {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% if weekly_contacts.count > 0 %}
+    <div class="col-lg-6 col-md-6 col-sm-3 col-xs-6">
+        <div class="box">
+        <div class="box-header with-border">
+            <h3 class="box-title">{{ project.name }} Weekly Enrolled Contacts</h3>
+        </div>
+        <div class="box-body">
+        <div class="container-fluid">
+                <table class="striped" style="line-height: 12px">
+                    <tr><th>Name</th><th>Number</th><th>Groups</th><th>Created On</th></tr>
+                    {% for contact in top_five_weekly_contacts %}
+                    <tr>
+                        <td>{{ contact.name }}</td>
+                        <td>{{ contact.urns }}</td>
+                        <td>{% clean contact.groups as groups %}{% for g in groups %}<ul><li>{{ g }}</li></ul>
+                        {% endfor %}</td>
+                        <td>{{ contact.created_on }}</td>
+                    </tr>
+                    {% endfor %}
+                </table>
+        </div>
+        </div>
+        {% if weekly_contacts.count > 5 %}
+        <div class="box-footer clearfix no-border">
+            <a href="{% url 'all-project-weekly-contacts' project.id %}" type="button"
+                    class="btn btn-default pull-right"><i class="fa fa-arrow-circle-right"></i>
+            View All Weekly Enrolled Contacts</a>
+        </div>
+        {% endif %}
+        </div>
+    </div>
+    {% endif %}
+    </div>
+
+
 
 {% endfor %} <!-- ending starting for loop project groups specific -->
 {% endblock %}

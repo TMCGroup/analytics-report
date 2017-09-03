@@ -3,9 +3,15 @@ from django.conf.urls import url, include
 # noinspection PyUnresolvedReferences,PyUnresolvedReferences
 from django_pdfkit import PDFView
 from .views import *
+from django.contrib.auth import views as auth_views
 
 
 urlpatterns = [
+    # url(r'^login/$', auth_views.login, name='login', kwargs={'redirect_authenticated_user': True,
+    #                                                          'template_name': 'userprofile/login.html',
+    #                                                          'authentication_form': EmailAuthenticationForm,
+    #                                                          'redirect_field_name': 'post',
+    #                                                          }),
     url(r'^home/$', dashboard, name='dashboard'),
     url(r'^home/$', dashboard_nav, name='dashboard-nav'),
     url(r'^report/view-1/(?P<project_id>[\-\w]+)/$', report_template_one, name='template_one'),
@@ -21,6 +27,7 @@ urlpatterns = [
     url(r'^report/view-1/(?P<project_id>[\-\w]+)/weekly-voice-interactions/$', view_all_project_weekly_voice_interactions,
         name='all-project-weekly-voice-interactions'),
     url(r'^my-pdf/$', PDFView.as_view(template_name='report/my-pdf.html'), name='my-pdf'),
-    url(r'^data/$', get_data_test),
-    url(r'^chart/(?P<project_id>[\-\w]+)/$', demo_piechart),
+    url(r'^chart/$', demo_multibarchart),
+    url(r'^pdf/$', generate_pdf_weekly_report, name='view_pdf'),
+    url(r'^emails/$', send_pdf_email, name='email'),
 ]
