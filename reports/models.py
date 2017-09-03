@@ -3,7 +3,6 @@ import datetime
 import hashlib
 import json
 import operator
-
 import numpy as np
 import urllib2
 from __builtin__ import reduce

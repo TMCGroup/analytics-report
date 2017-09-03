@@ -2,13 +2,13 @@
 db.sqlite3
 analyticreports/settings.py
 migrations/*
+.env
 
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.pyc
 *$py.class
-
 
 
 
