@@ -40,7 +40,7 @@ class MessageAdmin(admin.ModelAdmin):
     list_display = ('contact', 'urn', 'direction', 'type', 'status',
                     'visibility', 'text', 'labels', 'created_on', 'sent_on', 'modified_on',)
     list_filter = ('created_on', 'modified_on')
-    search_fields = ['urn', 'text']
+    search_fields = ['urn', 'text', 'status']
 
 
 class FlowAdmin(admin.ModelAdmin):

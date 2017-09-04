@@ -333,6 +333,7 @@ class Message(models.Model):
     def message_exists(cls, message):
         return cls.objects.filter(msg_id=message.id).exists()
 
+
     @classmethod
     def get_all_outgoing_messages(cls):
         return cls.objects.filter(direction='out').exclude(status='queued').all()
@@ -678,14 +679,9 @@ class Email(models.Model):
 
         email_subject = '%s Weekly ( %s ) Report' % (project.name, report_datetime)
         email_body = '<br> Hello,  ' \
-                     '<br>Please find attached the weekly report.' \
-                     '<br>Regards, <br> TMCG Team'
-
-        email_message = EmailMessage(email_subject, email_body, settings.EMAIL_HOST_USER, ['faithnassiwa@gmail.com',
-                                                                                           'faith.nassiwa@tmcg.co.ug',
-                                                                                           'faithnashaba@gmail.com'])
-        # email_message.attach_file(pdf_file)
-        # email_message.attach_file(csv_file, 'text/csv') ## Had issues attaching csv file generated from the view
+                     '<br><br>Please find attached the weekly report.' \
+                     '<br><br>Regards, <br> TMCG Team'
+        email_message = EmailMessage(email_subject, email_body, settings.EMAIL_HOST_USER, mailing_list)
         email_message.content_subtype = "html"
         return email_message
 

@@ -191,7 +191,7 @@ def report_template_one(request, project_id):
         "date_format": tooltip_date
     }
     chart2_data = {'x': x2data,
-                   'name2': 'series 2', 'y2': y2_data, 'extra2': extra2_serie
+                   'name2': 'contacts', 'y2': y2_data, 'extra2': extra2_serie
                    }
     chart2_type = "lineChart"
     chart2_container = 'linechart_container'  # container name
@@ -372,115 +372,6 @@ def export_to_csv(request, project_id):
     return response
 
 
-@cache_page(60 * 15)
-def send_csv_attachment_email(request, project_id):
-    buffer = StringIO()
-    project = Project.objects.get(id=project_id)
-    datetime_variable = datetime.date.today()
-    project_groups = project.group.all()
-    voice_platform = Voice.objects.filter(project=project).all()
-    group_list = []
-    for group in project_groups:
-        group_list.append(group.name)
-    contacts = Contact.get_project_contacts(project_groups_list=group_list)
-    weekly_contacts = Contact.get_weekly_project_contacts(project_groups_list=group_list)
-
-    contact_urns_list = []
-    for contact in contacts:
-        contact_urns_list.append(contact.urns)
-
-    number_of_contacts = len(contact_urns_list)
-    incoming_messages = Message.get_all_project_incoming_messages(contact_urns_list)
-    outgoing_messages = Message.get_all_project_outgoing_messages(contact_urns_list)
-    weekly_sent_messages = Message.get_weekly_sent_messages(contact_urns_list)
-    weekly_delivered_messages = Message.get_weekly_delivered_messages(contact_urns_list)
-    weekly_failed_messages = Message.get_weekly_failed_messages(contact_urns_list)
-    weekly_hanging_messages = Message.get_weekly_hanging_messages(contact_urns_list)
-    campaign_events = CampaignEvent.get_campaign_event()
-    groups = Group.get_all_groups()
-
-    writer = csv.writer(buffer)
-    writer.writerow([])
-    writer.writerow(['%s Report' % project.name])
-    writer.writerow(['Generated on: %s' % datetime_variable])
-    writer.writerow(['Compiled / Reported by: %s' % request.user])
-    writer.writerow([])
-    writer.writerow([])
-
-    writer.writerow(['All %s Groups' % project.name])
-    writer.writerow(['Group', 'Number of participants'])
-    for project_group in project_groups:
-        writer.writerow([project_group.name, project_group.count])
-    writer.writerow([])
-    writer.writerow([])
-
-    writer.writerow(['All %s Contacts' % project.name])
-    writer.writerow(['Contact Number', 'Contact Name', 'Group(s)', 'Created on / Joined on'])
-    for contact in contacts:
-        writer.writerow([contact.urns, contact.name,
-                         (contact_groups for contact_groups in report_tags.clean(contact.groups)), contact.created_on])
-    writer.writerow([])
-    writer.writerow([])
-
-    writer.writerow(['%s Weekly Enrolled Contacts' % project.name])
-    writer.writerow(['Contact Number', 'Contact Name', 'Group(s)', 'Created on / Joined on'])
-    for contact in weekly_contacts:
-        writer.writerow([contact.urns, contact.name,
-                         (contact_groups for contact_groups in report_tags.clean(contact.groups)), contact.created_on])
-    writer.writerow([])
-    writer.writerow([])
-
-    if number_of_contacts > 0:
-        writer.writerow(['%s Message Summary' % project.name])
-        writer.writerow(['Description', 'Number of Messages'])
-        writer.writerow(['Incoming Messages', incoming_messages.count()])
-        writer.writerow(['Outgoing Messages', outgoing_messages.count()])
-        writer.writerow([])
-        writer.writerow([])
-
-        writer.writerow(['%s Weekly Delivered Messages' % project.name])
-        writer.writerow(['Weekly Delivered Messages Count %s' % weekly_delivered_messages.count()])
-        writer.writerow(['Contact Number', 'Message', 'Status', 'Sent On'])
-        for message in weekly_delivered_messages:
-            writer.writerow([message.urn, message.text.encode("utf8"), message.status, message.sent_on])
-        writer.writerow([])
-        writer.writerow([])
-
-        writer.writerow(['%s Weekly Failed Messages' % project.name])
-        writer.writerow(['Weekly Failed Messages Count %s' % weekly_failed_messages.count()])
-        writer.writerow(['Contact Number', 'Message', 'Status', 'Sent On'])
-        for message in weekly_failed_messages:
-            writer.writerow([message.urn, message.text.encode("utf8"), message.status, message.sent_on])
-        writer.writerow([])
-        writer.writerow([])
-
-        writer.writerow(['%s Weekly Hanging Messages' % project.name])
-        writer.writerow(['Weekly Hanging Messages Count %s' % weekly_hanging_messages.count()])
-        writer.writerow(['Contact Number', 'Message', 'Status', 'Sent On'])
-        for message in weekly_hanging_messages:
-            writer.writerow([message.urn, message.text.encode("utf8"), message.status, message.sent_on, ])
-        writer.writerow([])
-        writer.writerow([])
-
-    writer.writerow(['Contact Number', 'Reason for call', 'Date'])
-    for call in voice_platform:
-        writer.writerow([call.contact, call.reason, call.created_on])
-    writer.writerow([])
-    writer.writerow([])
-    writer.writerow([])
-    pdf = generate_pdf_weekly_report(request, project.id)
-
-    # csv_file = buffer.getvalue()
-    # buffer.close()
-    # return csv_file
-
-    email = Email.get_report_emails(project_id=project.id)
-    email.attach('%s_report_%s.csv' % (project.name, datetime_variable), buffer.getvalue(), 'text/csv')
-    email.attach('%s_report_%s.pdf' % (project.name, datetime_variable), pdf, 'application/pdf')
-    email.send()
-    return HttpResponse("Email Sent")
-
-
 def generate_pdf_weekly_report(request, project_id):
     buffer = StringIO()
     doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=72, leftMargin=72, topMargin=20, bottomMargin=20)
@@ -541,7 +432,6 @@ def generate_pdf_weekly_report(request, project_id):
     report.append(Paragraph(ptext, styles["Normal"]))
     ptext = '<font size=12> Compiled By: %s</font>' % prepared_by
     report.append(Paragraph(ptext, styles["Normal"]))
-    report.append(Spacer(1, 12))
 
     report.append(Spacer(1, 12))
     report.append(Spacer(1, 12))
@@ -579,18 +469,126 @@ def generate_pdf_weekly_report(request, project_id):
     return pdf
 
 
+def send_csv_attachment_email(request, project_id):
+    buffer = StringIO()
+    project = Project.objects.get(id=project_id)
+    datetime_variable = datetime.date.today()
+    project_groups = project.group.all()
+    voice_platform = Voice.objects.filter(project=project).all()
+    group_list = []
+    for group in project_groups:
+        group_list.append(group.name)
+    contacts = Contact.get_project_contacts(project_groups_list=group_list)
+    weekly_contacts = Contact.get_weekly_project_contacts(project_groups_list=group_list)
+
+    contact_urns_list = []
+    for contact in contacts:
+        contact_urns_list.append(contact.urns)
+
+    number_of_contacts = len(contact_urns_list)
+    incoming_messages = Message.get_all_project_incoming_messages(contact_urns_list)
+    outgoing_messages = Message.get_all_project_outgoing_messages(contact_urns_list)
+    weekly_sent_messages = Message.get_weekly_sent_messages(contact_urns_list)
+    weekly_delivered_messages = Message.get_weekly_delivered_messages(contact_urns_list)
+    weekly_failed_messages = Message.get_weekly_failed_messages(contact_urns_list)
+    weekly_hanging_messages = Message.get_weekly_hanging_messages(contact_urns_list)
+    campaign_events = CampaignEvent.get_campaign_event()
+    groups = Group.get_all_groups()
+
+    writer = csv.writer(buffer)
+    writer.writerow([])
+    writer.writerow(['%s Report' % project.name])
+    writer.writerow(['Generated on: %s' % datetime_variable])
+    writer.writerow(['Compiled / Reported by: %s' % request.user])
+    writer.writerow([])
+    writer.writerow([])
+
+    writer.writerow(['All %s Groups' % project.name])
+    writer.writerow(['Group', 'Number of participants'])
+    for project_group in project_groups:
+        writer.writerow([project_group.name, project_group.count])
+    writer.writerow([])
+    writer.writerow([])
+
+    writer.writerow(['All %s Contacts' % project.name])
+    writer.writerow(['Contact Number', 'Contact Name', 'Group(s)', 'Created on / Joined on'])
+    for contact in contacts:
+        writer.writerow([contact.urns, contact.name,
+                         (contact_group for contact_group in report_tags.clean(contact.groups)), contact.created_on])
+    writer.writerow([])
+    writer.writerow([])
+
+    writer.writerow(['%s Weekly Enrolled Contacts' % project.name])
+    writer.writerow(['Contact Number', 'Contact Name', 'Group(s)', 'Created on / Joined on'])
+    for contact in weekly_contacts:
+        writer.writerow([contact.urns, contact.name,
+                         (contact_group for contact_group in report_tags.clean(contact.groups)), contact.created_on])
+    writer.writerow([])
+    writer.writerow([])
+
+    if number_of_contacts > 0:
+        writer.writerow(['%s Message Summary' % project.name])
+        writer.writerow(['Description', 'Number of Messages'])
+        writer.writerow(['Incoming Messages', incoming_messages.count()])
+        writer.writerow(['Outgoing Messages', outgoing_messages.count()])
+        writer.writerow([])
+        writer.writerow([])
+
+        writer.writerow(['%s Weekly Delivered Messages' % project.name])
+        writer.writerow(['Weekly Delivered Messages Count %s' % weekly_delivered_messages.count()])
+        writer.writerow(['Contact Number', 'Message', 'Status', 'Sent On'])
+        for message in weekly_delivered_messages:
+            writer.writerow([message.urn, message.text.encode("utf8"), message.status, message.sent_on])
+        writer.writerow([])
+        writer.writerow([])
+
+        writer.writerow(['%s Weekly Failed Messages' % project.name])
+        writer.writerow(['Weekly Failed Messages Count %s' % weekly_failed_messages.count()])
+        writer.writerow(['Contact Number', 'Message', 'Status', 'Sent On'])
+        for message in weekly_failed_messages:
+            writer.writerow([message.urn, message.text.encode("utf8"), message.status, message.sent_on])
+        writer.writerow([])
+        writer.writerow([])
+
+        writer.writerow(['%s Weekly Hanging Messages' % project.name])
+        writer.writerow(['Weekly Hanging Messages Count %s' % weekly_hanging_messages.count()])
+        writer.writerow(['Contact Number', 'Message', 'Status', 'Sent On'])
+        for message in weekly_hanging_messages:
+            writer.writerow([message.urn, message.text.encode("utf8"), message.status, message.sent_on, ])
+        writer.writerow([])
+        writer.writerow([])
+
+    writer.writerow(['Contact Number', 'Reason for call', 'Date'])
+    for call in voice_platform:
+        writer.writerow([call.contact, call.reason, call.created_on])
+    writer.writerow([])
+    writer.writerow([])
+    writer.writerow([])
+    pdf = generate_pdf_weekly_report(request, project.id)
+
+    # csv_file = buffer.getvalue()
+    # buffer.close()
+    # return csv_file
+
+    email = Email.get_report_emails(project_id=project.id)
+    email.attach('%s_report_%s.csv' % (project.name, datetime_variable), buffer.getvalue(), 'text/csv')
+    email.attach('%s_report_%s.pdf' % (project.name, datetime_variable), pdf, 'application/pdf')
+    email.send()
+    return HttpResponse("Email Sent")
+
+
+
+
 def send_pdf_email(request):
     datetime_variable = datetime.datetime.now()
     projects = Project.objects.filter(id__in=[1]).all()
     emails_sent = 0
     for project in projects:
-        #csv_file = send_csv_attachment_email(request, project.id)
         pdf = generate_pdf_weekly_report(request, project.id)
         email = EmailMessage('%s_report_%s' % (project.name, datetime_variable),
                              'Please find attached the weekly report.', 'info360mednet@gmail.com',
                              ['faithnassiwa@gmail.com'])
         email.attach('%s_report_%s.pdf' % (project.name, datetime_variable), pdf, 'application/pdf')
-        #email.attach('%s_report_%s.csv' % (project.name, datetime_variable), csv_file, 'text/csv')
         email.send()
         emails_sent += 1
 
