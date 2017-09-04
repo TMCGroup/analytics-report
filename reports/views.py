@@ -511,18 +511,16 @@ def send_csv_attachment_email(request, project_id):
     writer.writerow([])
 
     writer.writerow(['All %s Contacts' % project.name])
-    writer.writerow(['Contact Number', 'Contact Name', 'Group(s)', 'Created on / Joined on'])
+    writer.writerow(['Contact Number', 'Contact Name', 'Created on / Joined on'])
     for contact in contacts:
-        writer.writerow([contact.urns, contact.name,
-                         (contact_group for contact_group in report_tags.clean(contact.groups)), contact.created_on])
+        writer.writerow([contact.urns, contact.name, contact.created_on])
     writer.writerow([])
     writer.writerow([])
 
     writer.writerow(['%s Weekly Enrolled Contacts' % project.name])
-    writer.writerow(['Contact Number', 'Contact Name', 'Group(s)', 'Created on / Joined on'])
+    writer.writerow(['Contact Number', 'Contact Name', 'Created on / Joined on'])
     for contact in weekly_contacts:
-        writer.writerow([contact.urns, contact.name,
-                         (contact_group for contact_group in report_tags.clean(contact.groups)), contact.created_on])
+        writer.writerow([contact.urns, contact.name, contact.created_on])
     writer.writerow([])
     writer.writerow([])
 
