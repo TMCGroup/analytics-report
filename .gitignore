@@ -10,6 +10,5 @@ __pycache__/
 *.pyc
 *$py.class
 
-
-
-
+/logs
+supervisord.conf

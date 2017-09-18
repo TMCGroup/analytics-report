@@ -61,7 +61,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    'django.middleware.cache.UpdateCacheMiddleware',    # This must be first on the list
+    'django.middleware.cache.UpdateCacheMiddleware',  # This must be first on the list
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -98,7 +98,6 @@ WSGI_APPLICATION = 'analyticreports.wsgi.application'
 DATABASES = {
     'default': {
 
-
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': config('DB_NAME'),
         'USER': config('DB_USER'),
@@ -107,7 +106,6 @@ DATABASES = {
 
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/1.11/ref/settings/#auth-password-validators
@@ -173,11 +171,10 @@ MEDIA_URL = '/media/'
 EMAIL_USE_TLS = config('EMAIL_USE_TLS', cast=bool)
 EMAIL_HOST = config('EMAIL_HOST')
 EMAIL_HOST_USER = config('EMAIL_HOST_USER')
-EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')  # app specfic password generated from support.google.com/accounts/answer/185833
+EMAIL_HOST_PASSWORD = config(
+    'EMAIL_HOST_PASSWORD')  # app specfic password generated from support.google.com/accounts/answer/185833
 EMAIL_PORT = config('EMAIL_PORT', cast=int)
 DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL')
-
-
 
 CACHES = {
     'default': {

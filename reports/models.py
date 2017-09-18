@@ -80,9 +80,51 @@ class Group(models.Model):
         return self.name
 
 
+class Flow(models.Model):
+    uuid = models.CharField(max_length=100)
+    name = models.CharField(max_length=100)
+    expires = models.IntegerField(null=True)
+    active_runs = models.IntegerField(null=True)
+    complete_runs = models.IntegerField(null=True)
+    interrupted_runs = models.IntegerField(null=True)
+    expired_runs = models.IntegerField(null=True)
+    created_on = models.DateTimeField(null=True)
+    created_at = models.DateTimeField(auto_now=False, auto_now_add=True)
+    modified_at = models.DateTimeField(auto_now=True, auto_now_add=False)
+
+    @classmethod
+    def add_flows(cls, client):
+        flows = client.get_flows().all()
+        added = 0
+        for flow in flows:
+            if cls.flow_exists(flow):
+                cls.objects.filter(uuid=flow.uuid).update(name=flow.name, expires=flow.expires,
+                                                          active_runs=flow.runs.active,
+                                                          complete_runs=flow.runs.completed,
+                                                          interrupted_runs=flow.runs.interrupted,
+                                                          expired_runs=flow.runs.expired, created_on=flow.created_on)
+                added += 0
+            else:
+                cls.objects.create(uuid=flow.uuid, name=flow.name, expires=flow.expires,
+                                   active_runs=flow.runs.active, complete_runs=flow.runs.completed,
+                                   interrupted_runs=flow.runs.interrupted, expired_runs=flow.runs.expired,
+                                   created_on=flow.created_on)
+                added += 1
+
+        return added
+
+    @classmethod
+    def flow_exists(cls, flow):
+        return cls.objects.filter(uuid=flow.uuid).exists()
+
+    def __unicode__(self):
+        return self.name
+
+
 class Project(models.Model):
     name = models.CharField(max_length=200)
     group = models.ManyToManyField(Group, related_name='groups')
+    flows = models.ManyToManyField(Flow, related_name='flows')
     lead = models.CharField(max_length=200)
     active = models.BooleanField(default=True)
     created_on = models.DateTimeField(auto_now=False, auto_now_add=True)
@@ -130,13 +172,14 @@ class Contact(models.Model):
                 grp = []
                 for g in contact.groups:
                     grp.append(g.name)
+
                 if cls.contact_exists(contact):
-                    contact_instance = cls.objects.get(uuid=contact.uuid)
-                    for gp in contact_instance.groups:
-                        if gp in grp:
-                            grp.remove(gp)
-                        else:
-                            grp.append(gp)
+                    # contact_instance = cls.objects.filter(uuid=contact.uuid).first()
+                    # for gp in contact_instance.groups:
+                    #     if gp in grp:
+                    #         grp.remove(gp)
+                    #     else:
+                    #         grp.append(gp)
 
                     cls.objects.filter(uuid=contact.uuid).update(name=contact.name,
                                                                  language=contact.language,
@@ -148,7 +191,7 @@ class Contact(models.Model):
                                                                  created_on=contact.created_on,
                                                                  modified_on=contact.modified_on)
 
-                    grp[:] = []
+                    # grp[:] = []
 
                 else:
 
@@ -160,7 +203,7 @@ class Contact(models.Model):
                                        created_on=contact.created_on,
                                        modified_on=contact.modified_on)
 
-                    grp[:] = []
+                    # grp[:] = []
 
                     added += 1
 
@@ -282,7 +325,7 @@ class Message(models.Model):
     visibility = models.CharField(max_length=200)
     text = models.CharField(max_length=1000)
     labels = models.CharField(max_length=200)
-    created_on = models.DateTimeField(auto_now_add=True, editable=False)
+    created_on = models.DateTimeField(null=True, blank=True)
     sent_on = models.DateTimeField(null=True, blank=True)
     modified_on = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now=False, auto_now_add=True)
@@ -294,7 +337,8 @@ class Message(models.Model):
     @classmethod
     def save_messages(cls, client):
         added = 0
-        folders = ['inbox', 'sent', 'flows', 'archived', 'outbox', 'incoming', 'failed', 'calls']
+        folders = ['inbox', 'sent', 'failed', 'flows', 'archived', 'outbox', 'incoming',  'calls']
+        # folders = ['failed']
         for folder in folders:
             for message_batch in client.get_messages(folder=folder).iterfetches(retry_on_rate_exceed=True):
                 for message in message_batch:
@@ -311,7 +355,7 @@ class Message(models.Model):
                                                sent_on=message.sent_on, modified_on=message.modified_on)
                             added += 1
                         else:
-                            contact = Contact.objects.get(uuid=message.contact.uuid)
+                            contact = Contact.objects.filter(uuid=message.contact.uuid).first()
                             cls.objects.create(msg_id=message.id, broadcast=message.broadcast, contact=contact,
                                                urn=cls.clean_message_urn(message), channel=message.channel,
                                                direction=message.direction,
@@ -332,7 +376,6 @@ class Message(models.Model):
     @classmethod
     def message_exists(cls, message):
         return cls.objects.filter(msg_id=message.id).exists()
-
 
     @classmethod
     def get_all_outgoing_messages(cls):
@@ -412,7 +455,7 @@ class Message(models.Model):
             query = reduce(operator.or_, (Q(urn__contains=contact) for contact in contacts_list))
             date_diff = datetime.datetime.now() - datetime.timedelta(days=7)
             return cls.objects.filter(query, sent_on__range=(date_diff, datetime.datetime.now())).exclude(
-                status='delivered').all()
+                status='failed').all()
         else:
             return "No project contacts yet"
 
@@ -448,47 +491,6 @@ class Message(models.Model):
 
     def __unicode__(self):
         return self.urn
-
-
-class Flow(models.Model):
-    uuid = models.CharField(max_length=100)
-    name = models.CharField(max_length=100)
-    expires = models.IntegerField(null=True)
-    active_runs = models.IntegerField(null=True)
-    complete_runs = models.IntegerField(null=True)
-    interrupted_runs = models.IntegerField(null=True)
-    expired_runs = models.IntegerField(null=True)
-    created_on = models.DateTimeField(null=True)
-    created_at = models.DateTimeField(auto_now=False, auto_now_add=True)
-    modified_at = models.DateTimeField(auto_now=True, auto_now_add=False)
-
-    @classmethod
-    def add_flows(cls, client):
-        flows = client.get_flows().all()
-        added = 0
-        for flow in flows:
-            if cls.flow_exists(flow):
-                cls.objects.filter(uuid=flow.uuid).update(name=flow.name, expires=flow.expires,
-                                                          active_runs=flow.runs.active,
-                                                          complete_runs=flow.runs.completed,
-                                                          interrupted_runs=flow.runs.interrupted,
-                                                          expired_runs=flow.runs.expired, created_on=flow.created_on)
-                added += 0
-            else:
-                cls.objects.create(uuid=flow.uuid, name=flow.name, expires=flow.expires,
-                                   active_runs=flow.runs.active, complete_runs=flow.runs.completed,
-                                   interrupted_runs=flow.runs.interrupted, expired_runs=flow.runs.expired,
-                                   created_on=flow.created_on)
-                added += 1
-
-        return added
-
-    @classmethod
-    def flow_exists(cls, flow):
-        return cls.objects.filter(uuid=flow.uuid).exists()
-
-    def __unicode__(self):
-        return self.name
 
 
 class Campaign(models.Model):

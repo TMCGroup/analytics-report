@@ -3,7 +3,6 @@ from celery import shared_task
 from celery.schedules import crontab
 from celery.task import periodic_task
 from celery.utils.log import get_task_logger
-
 from .models import Email, Message, Workspace, Run, Project
 from .views import send_csv_attachment_email
 
