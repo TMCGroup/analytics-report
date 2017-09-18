@@ -169,13 +169,15 @@ class Contact(models.Model):
         for contact_batch in client.get_contacts().iterfetches(retry_on_rate_exceed=True):
             for contact in contact_batch:
 
-                grp = []
-                for g in contact.groups:
-                    grp.append(g.name)
+                groups = []
+                if contact.groups is not None:
+                    for group in contact.groups:
+                        groups.append(group.name)
 
                 if cls.contact_exists(contact):
                     # contact_instance = cls.objects.filter(uuid=contact.uuid).first()
-                    # for gp in contact_instance.groups:
+                    # for gp in contact_instance.groups:  // Not required as the field can be updated everytime which
+                    #                                    // avoids any repetitions.
                     #     if gp in grp:
                     #         grp.remove(gp)
                     #     else:
@@ -184,26 +186,26 @@ class Contact(models.Model):
                     cls.objects.filter(uuid=contact.uuid).update(name=contact.name,
                                                                  language=contact.language,
                                                                  urns=cls.clean_contacts(contact),
-                                                                 groups=grp,
+                                                                 groups=groups,
                                                                  fields=contact.fields,
                                                                  blocked=contact.blocked,
                                                                  stopped=contact.stopped,
                                                                  created_on=contact.created_on,
                                                                  modified_on=contact.modified_on)
 
-                    # grp[:] = []
+                    # grp[:] = [] //??
 
                 else:
 
                     cls.objects.create(uuid=contact.uuid, name=contact.name,
                                        language=contact.language,
-                                       urns=cls.clean_contacts(contact), groups=grp,
+                                       urns=cls.clean_contacts(contact), groups=groups,
                                        fields=contact.fields,
                                        blocked=contact.blocked, stopped=contact.stopped,
                                        created_on=contact.created_on,
                                        modified_on=contact.modified_on)
 
-                    # grp[:] = []
+                    # grp[:] = [] //??
 
                     added += 1
 
@@ -338,7 +340,7 @@ class Message(models.Model):
     def save_messages(cls, client):
         added = 0
         folders = ['inbox', 'sent', 'failed', 'flows', 'archived', 'outbox', 'incoming',  'calls']
-        # folders = ['failed']
+        # folders = ['failed'] //no feedback
         for folder in folders:
             for message_batch in client.get_messages(folder=folder).iterfetches(retry_on_rate_exceed=True):
                 for message in message_batch:
