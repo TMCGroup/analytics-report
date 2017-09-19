@@ -132,7 +132,7 @@ class Project(models.Model):
 
     @classmethod
     def get_project(cls, name):
-        return cls.objects.filter(name=name, active=True).all()
+        return cls.objects.filter(name=name, active=True)
 
     @classmethod
     def get_project_voice_data(cls):
