@@ -339,7 +339,7 @@ class Message(models.Model):
     @classmethod
     def save_messages(cls, client):
         added = 0
-        folders = ['inbox', 'sent', 'failed', 'flows', 'archived', 'outbox', 'incoming',  'calls']
+        folders = ['inbox', 'sent', 'failed', 'flows']
         # folders = ['failed'] //no feedback
         for folder in folders:
             for message_batch in client.get_messages(folder=folder).iterfetches(retry_on_rate_exceed=True):
