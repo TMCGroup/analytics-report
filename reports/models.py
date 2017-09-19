@@ -173,6 +173,8 @@ class Contact(models.Model):
                 if contact.groups is not None:
                     for group in contact.groups:
                         groups.append(group.name)
+                else:
+                    pass
 
                 if cls.contact_exists(contact):
                     # contact_instance = cls.objects.filter(uuid=contact.uuid).first()
