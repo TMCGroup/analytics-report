@@ -18,6 +18,8 @@ urlpatterns = [
     url(r'^report/email/csv/(?P<project_id>[\-\w]+)/$', send_csv_attachment_email, name='email-csv'),
     url(r'^report/csv/(?P<project_id>[\-\w]+)/$', export_to_csv, name='csv'),
     url(r'^report/view-1/(?P<project_id>[\-\w]+)/groups/$', view_all_project_groups, name='all-project-groups'),
+    url(r'^report/view-1/(?P<project_id>[\-\w]+)/contacts/$', view_all_project_contacts,
+        name='all-project-contacts'),
     url(r'^report/view-1/(?P<project_id>[\-\w]+)/weekly-contacts/$', view_all_project_weekly_contacts,
         name='all-project-weekly-contacts'),
     url(r'^report/view-1/(?P<project_id>[\-\w]+)/weekly-hanging-messages/$', view_all_project_weekly_hanging_messages,
