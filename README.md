@@ -1,3 +1,6 @@
+[![Travis Status](https://travis-ci.org/TMCGroup/analytics-report.svg?branch=master)]
+
+
 # Analytics Report
 Analytics Report is a TMCG Project used to get SMS and Voice Platform data into a local database
 for purposes of reporting.
