@@ -230,6 +230,21 @@ def view_all_project_weekly_contacts(request, project_id):
 
 
 @cache_page(60 * 15)
+def view_all_project_contacts(request, project_id):
+    projects = Project.get_all_projects()
+    project = Project.objects.get(id=project_id)
+    project_groups = project.group.all()
+    group_list = []
+    for group in project_groups:
+        group_list.append(group.name)
+
+    contacts = Contact.get_project_contacts(project_groups_list=group_list)
+    weekly_contacts = Contact.get_weekly_project_contacts(project_groups_list=group_list)
+
+    return render(request, 'report/project_contacts.html', locals())
+
+
+@cache_page(60 * 15)
 def view_all_project_weekly_failed_messages(request, project_id):
     projects = Project.get_all_projects()
     project = Project.objects.get(id=project_id)
