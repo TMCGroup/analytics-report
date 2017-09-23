@@ -590,7 +590,7 @@ class Run(models.Model):
     contact = models.ForeignKey(Contact, null=True, blank=True)
     responded = models.BooleanField(default=False)
     exit_type = models.CharField(max_length=100, null=True, blank=True)
-    values = models.TextField(blank=True)
+    values = models.TextField(blank=True, null=True)
     exited_on = models.DateTimeField(null=True)
     created_on = models.DateTimeField()
     modified_on = models.DateTimeField()
