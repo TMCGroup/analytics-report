@@ -29,7 +29,6 @@ urlpatterns = [
     url(r'^report/view-1/(?P<project_id>[\-\w]+)/weekly-voice-interactions/$', view_all_project_weekly_voice_interactions,
         name='all-project-weekly-voice-interactions'),
     url(r'^my-pdf/$', PDFView.as_view(template_name='report/my-pdf.html'), name='my-pdf'),
-    url(r'^chart/$', demo_multibarchart),
     url(r'^pdf/$', generate_pdf_weekly_report, name='view_pdf'),
-    url(r'^emails/$', send_pdf_email, name='email'),
+    url(r'^emails/(?P<project_id>[\-\w]+)/$', send_report_email, name='email'),
 ]

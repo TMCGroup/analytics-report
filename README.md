@@ -6,11 +6,12 @@ for purposes of reporting.
 * Getting SMS Platform Data
 * Getting Voice Platform Data
 * Generating pdf and csv reports
-* Sending weekly emails to project registered project leads
+* Sending weekly emails to registered project leads
 
 
 ## Prerequisite
 * Make sure you have rabbitmq-server installed globally.
+
 
 ## Installation
 ```
@@ -20,28 +21,42 @@ git clone (project-link)
 #Install requirements.
 pip install requirements.pip
 
-#Run django server
+#create .env file in the project's root directory
+This file should contain all variables provided in settings.py. Refer to the env.sample file in the project root
+directory to aid you create the .env file.
+
+#Run migrations and migrate
+python manage.py makemigrations
+python manage.py migrate
+
+#Follow *Usage* steps provided in the section below this one.
+steps 1 to 3
+
+#Run django server in one terminal
 python manage.py runserver
 
-#Run the worker.
+#Run the worker in another terminal
  celery worker -A analyticreports --loglevel=INFO
 	
-#Run the scheduler.
+#Run the scheduler in another terminal
 celery -A analyticreports beat -l info -S django
+
+#Follow *Usage* steps provided in the section below this one.
+step 4 to 5
 
  ```
  [For more info on periodic tasks](http://docs.celeryproject.org/en/latest/userguide/periodic-tasks.html)
 
+
 ## Usage
 
-* Create superuser `python manage.py createsuperuser` and login via django admin
-* Add Workspaces.
-* Add Intervals and Crontabs for when periodic tasks should run.
-* Add Periodic tasks for getting the data.
-* Add Projects(groups for which to generate excel/pdf/emails). This can be done after getting the group data from
-rapidpro.
-* Add Periodic tasks for generating excel/pdf/email.
-* Add Emails.
-* Visit http://127.0.0.1:8000/home.
+1 Create superuser by running`python manage.py createsuperuser` and Visit http://127.0.0.1:8000/admin then
+login using your created superuser credentials.
+2 Add Workspaces(available under reports in the side menu and control panel), this should be straight forward when logged in django admin.
+3 Add Periodic tasks (available under django celery beat in the side menu and control panel) for get_workspace_data, get_hiwa_data and send_emails. Use Intervals or Crontabs accordingly.
+4 Add Project (select groups for respective project whose report is to be generated). This should be done after fetching
+data from RapidPro workspaces.
+5 Visit http://127.0.0.1:8000/home, this might take awhile to initially load depending on available data.
+6
 
 

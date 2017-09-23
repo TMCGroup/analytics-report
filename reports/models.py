@@ -8,11 +8,13 @@ import urllib2
 from __builtin__ import reduce
 from django.conf import settings
 from django.core.mail import EmailMessage
+from django.template.loader import render_to_string
 from django.db import models
 from django.db.models import Q
 from temba_client.v2 import TembaClient
 
 tz = 'Africa/Kampala'
+yesterday = (datetime.datetime.now() - datetime.timedelta(7)).isoformat()
 
 
 class Workspace(models.Model):
@@ -32,7 +34,7 @@ class Workspace(models.Model):
             client = TembaClient(workspace.host, workspace.key)
             Group.add_groups(client=client)
             Contact.save_contacts(client=client)
-            Message.save_messages(client=client)
+            # Message.save_messages(client)
             Flow.add_flows(client=client)
             Run.add_runs(client=client)
             Campaign.add_campaigns(client=client)
@@ -92,6 +94,9 @@ class Flow(models.Model):
     created_at = models.DateTimeField(auto_now=False, auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True, auto_now_add=False)
 
+    class Meta:
+        ordering = ['name', ]
+
     @classmethod
     def add_flows(cls, client):
         flows = client.get_flows().all()
@@ -130,6 +135,9 @@ class Project(models.Model):
     created_on = models.DateTimeField(auto_now=False, auto_now_add=True)
     modified_on = models.DateTimeField(auto_now=True, auto_now_add=False)
 
+    class Meta:
+        ordering = ['name', ]
+
     @classmethod
     def get_project(cls, name):
         return cls.objects.filter(name=name, active=True)
@@ -163,12 +171,14 @@ class Contact(models.Model):
     created_at = models.DateTimeField(auto_now=False, auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True, auto_now_add=False)
 
+    class Meta:
+        ordering = ['-created_on', ]
+
     @classmethod
     def save_contacts(cls, client):
         added = 0
-        for contact_batch in client.get_contacts().iterfetches(retry_on_rate_exceed=True):
+        for contact_batch in client.get_contacts(after=yesterday).iterfetches(retry_on_rate_exceed=True):
             for contact in contact_batch:
-
                 groups = []
                 if contact.groups is not None:
                     for group in contact.groups:
@@ -177,14 +187,6 @@ class Contact(models.Model):
                     pass
 
                 if cls.contact_exists(contact):
-                    # contact_instance = cls.objects.filter(uuid=contact.uuid).first()
-                    # for gp in contact_instance.groups:  // Not required as the field can be updated everytime which
-                    #                                    // avoids any repetitions.
-                    #     if gp in grp:
-                    #         grp.remove(gp)
-                    #     else:
-                    #         grp.append(gp)
-
                     cls.objects.filter(uuid=contact.uuid).update(name=contact.name,
                                                                  language=contact.language,
                                                                  urns=cls.clean_contacts(contact),
@@ -194,8 +196,6 @@ class Contact(models.Model):
                                                                  stopped=contact.stopped,
                                                                  created_on=contact.created_on,
                                                                  modified_on=contact.modified_on)
-
-                    # grp[:] = [] //??
 
                 else:
 
@@ -207,9 +207,13 @@ class Contact(models.Model):
                                        created_on=contact.created_on,
                                        modified_on=contact.modified_on)
 
-                    # grp[:] = [] //??
-
                     added += 1
+
+                contact = Contact.objects.get(uuid=contact.uuid)
+                workspaces = Workspace.objects.all()
+                for workspace in workspaces:
+                    client = TembaClient(workspace.host, workspace.key)
+                    Message.save_messages(client, contact)
 
         return added
 
@@ -223,7 +227,7 @@ class Contact(models.Model):
 
     @classmethod
     def get_all_contacts(cls):
-        return cls.objects.all()
+        return cls.objects.all().order_by('-created_on')
 
     @classmethod
     def get_project_contacts(cls, project_groups_list):
@@ -339,41 +343,41 @@ class Message(models.Model):
         ordering = ['-created_on', ]
 
     @classmethod
-    def save_messages(cls, client):
+    def save_messages(cls, client, contact):
         added = 0
-        folders = ['inbox', 'sent', 'failed', 'flows']
-        # folders = ['failed'] //no feedback
-        for folder in folders:
-            for message_batch in client.get_messages(folder=folder).iterfetches(retry_on_rate_exceed=True):
-                for message in message_batch:
-                    if not cls.message_exists(message):
-                        if not Contact.objects.filter(uuid=message.contact.uuid).exists():
-                            contact = Contact.objects.create(uuid=message.contact.uuid, name=message.contact.name,
-                                                             urns=cls.clean_message_urn(message),
-                                                             )
-                            cls.objects.create(msg_id=message.id, broadcast=message.broadcast, contact=contact,
-                                               urn=cls.clean_message_urn(message), channel=message.channel,
-                                               direction=message.direction,
-                                               type=message.type, status=message.status, visibility=message.visibility,
-                                               text=message.text, labels=message.labels, created_on=message.created_on,
-                                               sent_on=message.sent_on, modified_on=message.modified_on)
-                            added += 1
-                        else:
-                            contact = Contact.objects.filter(uuid=message.contact.uuid).first()
-                            cls.objects.create(msg_id=message.id, broadcast=message.broadcast, contact=contact,
-                                               urn=cls.clean_message_urn(message), channel=message.channel,
-                                               direction=message.direction,
-                                               type=message.type, status=message.status, visibility=message.visibility,
-                                               text=message.text, labels=message.labels, created_on=message.created_on,
-                                               sent_on=message.sent_on, modified_on=message.modified_on)
-                            added += 1
-                            # else:  # cater for update in status mainly for hanging messages taking 48hours delivery receipt
-                            #     Message.objects.filter(msg_id=message.id).update(broadcast=message.broadcast,
-                            #                                                      channel=message.channel,
-                            #                                                      direction=message.direction,
-                            #                                                      type=message.type, status=message.status,
-                            #                                                      visibility=message.visibility,
-                            #                                                      modified_on=message.modified_on)
+        # folders = ['inbox', 'sent', 'flows', 'outbox', 'incoming', 'failed' ]
+        # for folder in folders:
+        for message_batch in client.get_messages(contact=contact.uuid, after=yesterday).iterfetches(
+                retry_on_rate_exceed=True):
+            for message in message_batch:
+                if not cls.message_exists(message):
+                    if not Contact.objects.filter(uuid=message.contact.uuid).exists():
+                        contact = Contact.objects.create(uuid=message.contact.uuid, name=message.contact.name,
+                                                         urns=cls.clean_message_urn(message),
+                                                         )
+                        cls.objects.create(msg_id=message.id, broadcast=message.broadcast, contact=contact,
+                                           urn=cls.clean_message_urn(message), channel=message.channel,
+                                           direction=message.direction,
+                                           type=message.type, status=message.status, visibility=message.visibility,
+                                           text=message.text, labels=message.labels, created_on=message.created_on,
+                                           sent_on=message.sent_on, modified_on=message.modified_on)
+                        added += 1
+                    else:
+                        contact = Contact.objects.filter(uuid=message.contact.uuid).first()
+                        cls.objects.create(msg_id=message.id, broadcast=message.broadcast, contact=contact,
+                                           urn=cls.clean_message_urn(message), channel=message.channel,
+                                           direction=message.direction,
+                                           type=message.type, status=message.status, visibility=message.visibility,
+                                           text=message.text, labels=message.labels, created_on=message.created_on,
+                                           sent_on=message.sent_on, modified_on=message.modified_on)
+                        added += 1
+                else:  # cater for update in status mainly for hanging messages taking 48hours delivery receipt
+                    Message.objects.filter(msg_id=message.id).update(broadcast=message.broadcast,
+                                                                     channel=message.channel,
+                                                                     direction=message.direction,
+                                                                     type=message.type, status=message.status,
+                                                                     visibility=message.visibility,
+                                                                     modified_on=message.modified_on)
 
         return added
 
@@ -448,8 +452,8 @@ class Message(models.Model):
         if len(contacts_list) > 0:
             query = reduce(operator.or_, (Q(urn__contains=contact) for contact in contacts_list))
             date_diff = datetime.datetime.now() - datetime.timedelta(days=7)
-            return cls.objects.filter(query, direction='out', sent_on__range=(date_diff, datetime.datetime.now()))\
-                .exclude(status__in=['delivered', 'failed']).all()
+            return cls.objects.filter(query, direction='out', sent_on__range=(date_diff, datetime.datetime.now())) \
+                .exclude(status__in=['delivered', 'failed', 'handled', 'queued']).all()
         else:
             return "No project contacts yet"
 
@@ -586,24 +590,28 @@ class Run(models.Model):
     contact = models.ForeignKey(Contact, null=True, blank=True)
     responded = models.BooleanField(default=False)
     exit_type = models.CharField(max_length=100, null=True, blank=True)
+    values = models.TextField(blank=True)
     exited_on = models.DateTimeField(null=True)
     created_on = models.DateTimeField()
     modified_on = models.DateTimeField()
     created_at = models.DateTimeField(auto_now=False, auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True, auto_now_add=False)
 
+    class Meta:
+        ordering = ['-created_on', ]
+
     @classmethod
     def add_runs(cls, client):
         added = 0
-        for run_batch in client.get_runs().iterfetches(retry_on_rate_exceed=True):
+        for run_batch in client.get_runs(after=yesterday).iterfetches(retry_on_rate_exceed=True):
             for run in run_batch:
                 if not cls.run_exists(run):
                     if not (Contact.objects.filter(uuid=run.contact.uuid).exists() & Flow.objects.filter
-                                    (uuid=run.flow.uuid).exists()):
+                        (uuid=run.flow.uuid).exists()):
                         contact = Contact.objects.create(uuid=run.contact.uuid, name=run.contact.name)
                         flow = Flow.objects.create(uuid=run.flow.uuid, name=run.flow.name)
                         run_instance = cls.objects.create(run_id=run.id, flow=flow, contact=contact,
-                                                          responded=run.responded,
+                                                          responded=run.responded, values=run.values,
                                                           exit_type=run.exit_type, exited_on=run.exited_on,
                                                           created_on=run.created_on, modified_on=run.modified_on)
                         added += 1
@@ -612,7 +620,7 @@ class Run(models.Model):
                         contact = Contact.objects.filter(uuid=run.contact.uuid).first()
                         flow = Flow.objects.filter(uuid=run.flow.uuid).first()
                         run_instance = cls.objects.create(run_id=run.id, flow=flow, contact=contact,
-                                                          responded=run.responded,
+                                                          responded=run.responded, values=run.values,
                                                           exit_type=run.exit_type, exited_on=run.exited_on,
                                                           created_on=run.created_on, modified_on=run.modified_on)
                         added += 1
@@ -630,16 +638,16 @@ class Run(models.Model):
 
 class Value(models.Model):
     value_name = models.CharField(max_length=100, blank=True, null=True)
-    value = models.CharField(max_length=100, blank=True, null=True)
-    category = models.CharField(max_length=100, blank=True, null=True)
-    node = models.CharField(max_length=100, blank=True, null=True)
+    value = models.CharField(max_length=1000, blank=True, null=True)
+    category = models.CharField(max_length=1000, blank=True, null=True)
+    node = models.CharField(max_length=1000, blank=True, null=True)
     time = models.DateTimeField(blank=True, null=True)
     run = models.ForeignKey(Run, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now=False, auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True, auto_now_add=False)
 
-    def __unicode__(self):
-        return self.value
+    class Meta:
+        ordering = ['-time', ]
 
     @classmethod
     def add_values(cls, run, values):
@@ -663,11 +671,17 @@ class Value(models.Model):
     def value_exists(cls, run):
         return cls.objects.filter(run=run).exists()
 
+    def __unicode__(self):
+        return self.value
+
 
 class Email(models.Model):
     name = models.CharField(max_length=100)
     email_address = models.EmailField(max_length=200)
     project = models.ManyToManyField(Project)
+
+    class Meta:
+        ordering = ['name', ]
 
     @classmethod
     def add_email(cls, name, email_address, project):
@@ -677,18 +691,14 @@ class Email(models.Model):
     def get_report_emails(cls, project_id):
         project = Project.objects.get(id=project_id)
         mailing_list = []
+        report_datetime = datetime.datetime.now()
         email_addresses = cls.objects.filter(project__in=[project]).all()
         for email_address in email_addresses:
             mailing_list.append(email_address.email_address)
 
-        report_datetime = datetime.datetime.now()
-
         email_subject = '%s Weekly ( %s ) Report' % (project.name, report_datetime)
-        email_body = '<br> Hello,  ' \
-                     '<br><br>Please find attached the weekly report.' \
-                     '<br><br>Regards, <br> TMCG Team'
+        email_body = render_to_string('report/report_email_body.html')
         email_message = EmailMessage(email_subject, email_body, settings.EMAIL_HOST_USER, mailing_list)
-        email_message.content_subtype = "html"
         return email_message
 
     def __unicode__(self):
@@ -705,8 +715,8 @@ class Voice(models.Model):
     created_by = models.CharField(max_length=100)
     created_on = models.DateTimeField(null=True)
 
-    def __unicode__(self):
-        return str(self.project)
+    class Meta:
+        ordering = ['-created_on', ]
 
     @classmethod
     def get_data(cls, project_name):
@@ -753,3 +763,6 @@ class Voice(models.Model):
     def get_weekly_voice_interaction(cls, project):
         date_diff = datetime.datetime.now() - datetime.timedelta(days=7)
         return cls.objects.filter(created_on__range=(date_diff, datetime.datetime.now()), project=project).all()
+
+    def __unicode__(self):
+        return str(self.project)

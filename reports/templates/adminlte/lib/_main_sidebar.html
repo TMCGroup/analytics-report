@@ -19,7 +19,7 @@
                 <span>{{ project.name }} Details</span></a></li>
             <li><a href="{% url 'csv' project.id %}"><i class="fa fa-download"></i>
                 <span>Download CSV File</span></a></li>
-            <li><a href="{% url 'email-csv' project.id %}"><i class="fa fa-paper-plane"></i>
+            <li><a href="{% url 'email' project.id %}"><i class="fa fa-paper-plane"></i>
                 <span>Send Report Email</span></a></li>
 
         </ul>
