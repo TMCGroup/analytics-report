@@ -30,7 +30,7 @@ python manage.py makemigrations
 python manage.py migrate
 
 #Follow *Usage* steps provided in the section below this one.
-steps 1 to 3
+steps (1) to (3)
 
 #Run django server in one terminal
 python manage.py runserver
@@ -42,7 +42,7 @@ python manage.py runserver
 celery -A analyticreports beat -l info -S django
 
 #Follow *Usage* steps provided in the section below this one.
-step 4 to 5
+step (4) to (5)
 
  ```
  [For more info on periodic tasks](http://docs.celeryproject.org/en/latest/userguide/periodic-tasks.html)
@@ -50,13 +50,17 @@ step 4 to 5
 
 ## Usage
 
-1 Create superuser by running`python manage.py createsuperuser` and Visit http://127.0.0.1:8000/admin then
+* (1) Create superuser by running`python manage.py createsuperuser` and Visit http://127.0.0.1:8000/admin then
 login using your created superuser credentials.
-2 Add Workspaces(available under reports in the side menu and control panel), this should be straight forward when logged in django admin.
-3 Add Periodic tasks (available under django celery beat in the side menu and control panel) for get_workspace_data, get_hiwa_data and send_emails. Use Intervals or Crontabs accordingly.
-4 Add Project (select groups for respective project whose report is to be generated). This should be done after fetching
+* (2) Add Workspaces(available under reports in the side menu and control panel), this should be straight forward when
+logged in django admin.
+* (3) Add Periodic tasks (available under django celery beat in the side menu and control panel) for get_workspace_data,
+ get_hiwa_data and send_emails. Use Intervals or Crontabs accordingly.
+* (4) Add Project (select groups and flows for respective project whose report is to be generated). This should be done
+after fetching. Also register the Emails that will be receiving the reports under Emails in django admin.
 data from RapidPro workspaces.
-5 Visit http://127.0.0.1:8000/home, this might take awhile to initially load depending on available data.
-6
+* (5) Visit http://127.0.0.1:8000/home, this might take awhile to initially load depending on available data. Select any
+ of the other links provided in the side bar to visit particular project results.
+* (6) Modify Projects and Emails in django admin as required whenever.
 
 
