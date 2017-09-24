@@ -692,14 +692,15 @@ class Email(models.Model):
         project = Project.objects.get(id=project_id)
         mailing_list = []
         report_datetime = datetime.datetime.now()
-        email_addresses = cls.objects.filter(project__in=[project]).all()
-        for email_address in email_addresses:
-            mailing_list.append(email_address.email_address)
-
-        email_subject = '%s Weekly ( %s ) Report' % (project.name, report_datetime)
-        email_body = render_to_string('report/report_email_body.html')
-        email_message = EmailMessage(email_subject, email_body, settings.EMAIL_HOST_USER, mailing_list)
-        return email_message
+        project_report_recipients = cls.objects.filter(project__in=[project]).all()
+        for project_report_recipient in project_report_recipients:
+            #mailing_list.append(project_lead.email_address)
+            context = {'project_report_recipient_name': project_report_recipient.name}
+            email_subject = '%s Weekly ( %s ) Report' % (project.name, report_datetime)
+            email_body = render_to_string('report/report_email_body.html', context)
+            email_message = EmailMessage(email_subject, email_body, settings.EMAIL_HOST_USER,
+                                         [project_report_recipient.email_address])
+            return email_message
 
     def __unicode__(self):
         return self.name

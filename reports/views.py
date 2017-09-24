@@ -204,6 +204,7 @@ def report_template_one(request, project_id):
         'tag_script_js': True,
         'jquery_on_ready': False,
     }
+    email= Email.get_report_emails(project.id)
 
     return render(request, 'report/template_one.html', locals())
 
@@ -475,7 +476,7 @@ def generate_pdf_weekly_report(request, project_id):
                                       ('BOX', (0, 0), (-1, -1), 0.5, colors.black),
                                       ('VALIGN', (0, 0), (-1, 0), 'MIDDLE'),
                                       ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-                                      ('BACKGROUND', (0, 0), (-1, 0), colors.yellow),
+                                      ('BACKGROUND', (0, 0), (-1, 0), colors.lightblue),
                                       ])
 
     report.append(t)
