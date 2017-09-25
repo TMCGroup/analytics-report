@@ -20,6 +20,7 @@ env:
 
 # command to install dependencies
 install: "pip install -r requirements.pip"
+install: "travis_wait 30 mvn install"
 
 before_script:
   - psql -c 'create database travis_ci_test;' -U postgres
