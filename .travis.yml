@@ -20,12 +20,12 @@ env:
 
 # command to install dependencies
 install: "pip install -r requirements.pip"
-install: "mvn dependency:resolve"
+#install: "mvn dependency:resolve"
 
 before_script:
   - psql -c 'create database travis_ci_test;' -U postgres
 
 # command to run tests
 script:
-  - travis_wait 30 mvn package -Dtestng=test.xml
+  #- travis_wait 30 mvn package -Dtestng=test.xml
   - python manage.py test
