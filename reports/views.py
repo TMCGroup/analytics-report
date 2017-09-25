@@ -596,7 +596,7 @@ def send_report_email(request, project_id):
     email = Email.get_report_emails(project.id)
     email.attach('%s_report_%s.pdf' % (project.name, report_datetime), pdf, 'application/pdf')
     email.attach('%s_report_%s.csv' % (project.name, report_datetime), csv_file, 'text/csv')
-    email.content_subtype = "html"
+    # email.content_subtype = "html"
     email.send()
 
     return HttpResponse('email(s) sent')

@@ -298,21 +298,26 @@ class EmailTest(TestCase):
         project_two = Project.objects.create(name='Test Project Two', lead='Test Lead')
         project_two.group.add(group_one)
         email_one = Email.objects.create(name="Test Email One", email_address="test1@email.com")
-        email_one.project.add(project_one, project_two)
+        email_one.project.add(project_one)
+        email_one.project.add(project_two)
         email_two = Email.objects.create(name="Test Email Two", email_address="test2@email.com")
         email_two.project.add(project_one)
 
-    def test_get_report_emails(self):
-        project = Project.objects.first()
-        emails = Email.objects.filter(project__in=[project]).all()
-        report_datetime = datetime.datetime.now()
-        emailing_list = []
-        for email in emails:
-            emailing_list.append(email.email_address)
+    def test_get_project_mailing_list(self):
+        project = Project.objects.get(name='Test Project One')
+        mailing_list = ["test1@email.com", "test2@email.com"]
+        mailing_list_test = Email.get_project_mailing_list(project.id)
+        self.assertEquals(mailing_list, mailing_list_test)
 
+    def test_get_report_emails(self):
+        project = Project.objects.get(name='Test Project One')
+        emails = Email.objects.filter(project__name=project.name).all()
+        report_datetime = datetime.datetime.now()
+        emailing_list = Email.get_project_mailing_list(project.id)
         email_subject = '%s Weekly ( %s ) Report' % (project.name, report_datetime)
         email_body = render_to_string('report/report_email_body.html')
-        email_message = EmailMessage(email_subject, email_body, settings.EMAIL_HOST_USER, emailing_list)
+        email_message = EmailMessage(email_subject,email_body,
+                                     settings.EMAIL_HOST_USER, emailing_list)
         self.assertEquals(email_message.recipients(), Email.get_report_emails(project_id=project.id).recipients())
 
 

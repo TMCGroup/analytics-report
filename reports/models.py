@@ -7,7 +7,7 @@ import numpy as np
 import urllib2
 from __builtin__ import reduce
 from django.conf import settings
-from django.core.mail import EmailMessage
+from django.core.mail import EmailMessage, EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.db import models
 from django.db.models import Q
@@ -688,19 +688,25 @@ class Email(models.Model):
         return cls.objects.create(name=name, email_address=email_address, project=project)
 
     @classmethod
-    def get_report_emails(cls, project_id):
+    def get_project_mailing_list(cls, project_id):
         project = Project.objects.get(id=project_id)
         mailing_list = []
-        report_datetime = datetime.datetime.now()
-        project_report_recipients = cls.objects.filter(project__in=[project]).all()
+        project_report_recipients = cls.objects.filter(project__name=project.name).all()
         for project_report_recipient in project_report_recipients:
-            #mailing_list.append(project_lead.email_address)
-            context = {'project_report_recipient_name': project_report_recipient.name}
-            email_subject = '%s Weekly ( %s ) Report' % (project.name, report_datetime)
-            email_body = render_to_string('report/report_email_body.html', context)
-            email_message = EmailMessage(email_subject, email_body, settings.EMAIL_HOST_USER,
-                                         [project_report_recipient.email_address])
-            return email_message
+            mailing_list.append(project_report_recipient.email_address)
+
+        return mailing_list
+
+    @classmethod
+    def get_report_emails(cls, project_id):
+        project = Project.objects.get(id=project_id)
+        mailing_list = cls.get_project_mailing_list(project.id)
+        report_datetime = datetime.datetime.now()
+        email_subject = '%s Weekly ( %s ) Report' % (project.name, report_datetime)
+        email_body = render_to_string('report/report_email_body.html')
+        email_message = EmailMultiAlternatives(email_subject, email_body, settings.EMAIL_HOST_USER, mailing_list)
+        email_message.attach_alternative(email_body, "text/html")
+        return email_message
 
     def __unicode__(self):
         return self.name
