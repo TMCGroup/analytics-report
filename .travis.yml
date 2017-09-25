@@ -29,5 +29,5 @@ before_script:
 
 # command to run tests
 script:
-  #- travis_wait 30 mvn package -Dtestng=test.xml
+  - travis_wait 30 mvn package -Dtestng=test.xml
   - python manage.py test
