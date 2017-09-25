@@ -4,7 +4,7 @@ from django.utils import timezone
 from temba_client.v2 import TembaClient
 from .models import Contact, Message, Group, Run, Flow, Workspace, Project, Value, Email, Voice
 from django.conf import settings
-from django.core.mail import EmailMessage
+from django.core.mail import EmailMessage, EmailMultiAlternatives
 from django.template.loader import render_to_string
 
 
@@ -316,8 +316,7 @@ class EmailTest(TestCase):
         emailing_list = Email.get_project_mailing_list(project.id)
         email_subject = '%s Weekly ( %s ) Report' % (project.name, report_datetime)
         email_body = render_to_string('report/report_email_body.html')
-        email_message = EmailMessage(email_subject,email_body,
-                                     settings.EMAIL_HOST_USER, emailing_list)
+        email_message = EmailMultiAlternatives(email_subject, email_body, settings.EMAIL_HOST_USER, emailing_list)
         self.assertEquals(email_message.recipients(), Email.get_report_emails(project_id=project.id).recipients())
 
 
