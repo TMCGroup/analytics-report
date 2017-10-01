@@ -344,9 +344,7 @@ class Message(models.Model):
     @classmethod
     def save_messages(cls, client, contact):
         added = 0
-        # folders = ['inbox', 'sent', 'flows', 'outbox', 'incoming', 'failed' ]
-        # for folder in folders:
-        for message_batch in client.get_messages(contact=contact.uuid, after=yesterday).iterfetches(
+        for message_batch in client.get_messages(contact=contact, after=yesterday).iterfetches(
                 retry_on_rate_exceed=True):
             for message in message_batch:
                 if not cls.message_exists(message):
