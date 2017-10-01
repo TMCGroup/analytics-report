@@ -34,7 +34,6 @@ class Workspace(models.Model):
             client = TembaClient(workspace.host, workspace.key)
             Group.add_groups(client=client)
             Contact.save_contacts(client=client)
-            # Message.save_messages(client)
             Flow.add_flows(client=client)
             Run.add_runs(client=client)
             Campaign.add_campaigns(client=client)
@@ -209,7 +208,7 @@ class Contact(models.Model):
 
                     added += 1
 
-                contact = Contact.objects.get(uuid=contact.uuid)
+                contact = Contact.objects.filter(uuid=contact.uuid)
                 workspaces = Workspace.objects.all()
                 for workspace in workspaces:
                     client = TembaClient(workspace.host, workspace.key)
