@@ -25,8 +25,7 @@ pip install requirements.pip
 This file should contain all variables provided in settings.py. Refer to the env.sample file in the project root
 directory to aid you create the .env file.
 
-#Run migrations and migrate
-python manage.py makemigrations
+#Migrate migrations
 python manage.py migrate
 
 #Follow *Usage* steps provided in the section below this one.
