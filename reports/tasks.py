@@ -23,6 +23,6 @@ def get_hiwa_data():
 def send_emails():
     projects = Project.objects.all()
     for project in projects:
-        send_report_email(request, project_id=project.id)
+        send_report_email(project_id=project.id)
     return
 

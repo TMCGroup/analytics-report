@@ -204,9 +204,64 @@ def report_template_one(request, project_id):
         'tag_script_js': True,
         'jquery_on_ready': False,
     }
-    email= Email.get_report_emails(project.id)
+    email = Email.get_report_emails(project.id)
 
     return render(request, 'report/template_one.html', locals())
+
+
+def message_out(message, direction):
+    if direction is "out":
+        return message
+    else:
+        return " "
+
+
+def message_in(message, direction):
+    if direction is "in":
+        return message
+    else:
+        return " "
+
+
+def export_to_csv_all_messages(request, project_id):
+    project = Project.objects.get(id=project_id)
+    datetime_variable = datetime.datetime.now()
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="%s_report_%s.csv"' % (project.name, datetime_variable)
+    project_groups = project.group.all()
+
+    group_list = []
+    for group in project_groups:
+        group_list.append(group.name)
+
+    contacts = Contact.get_project_contacts(project_groups_list=group_list)
+    weekly_contacts = Contact.get_weekly_project_contacts(project_groups_list=group_list)
+
+    contact_urns_list = []
+    for contact in contacts:
+        contact_urns_list.append(contact.urns)
+
+    all_messages = Message.get_all_project_messages(contact_urns_list)
+
+    writer = csv.writer(response)
+    writer.writerow([])
+    writer.writerow(['%s Report' % project.name])
+
+    if len(contact_urns_list) > 0:
+
+        writer.writerow(['%s Messages' % project.name])
+        writer.writerow(['Contact Number', 'Message', 'Response', 'Status', 'Sent On'])
+        for message in all_messages:
+            if message.direction == 'out':
+                writer.writerow([message.urn, message.text.encode("utf-8"), ' ', message.status, message.sent_on])
+            elif message.direction == 'in':
+                writer.writerow([message.urn, ' ', message.text.encode("utf-8"), message.status, message.sent_on])
+            else:
+                writer.writerow([message.urn, ' ', ' ', message.status, message.sent_on])
+        writer.writerow([])
+        writer.writerow([])
+
+    return response
 
 
 @cache_page(60 * 15)
@@ -600,4 +655,3 @@ def send_report_email(request, project_id):
     email.send()
 
     return HttpResponse('email(s) sent')
-

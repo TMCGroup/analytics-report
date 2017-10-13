@@ -491,6 +491,12 @@ class Message(models.Model):
             return "No project contacts yet"
 
     @classmethod
+    def get_all_project_messages(cls, contacts_list):
+        query = reduce(operator.or_, (Q(urn__contains=contact) for contact in contacts_list))
+        date_diff = datetime.datetime.now() - datetime.timedelta(days=42)
+        return cls.objects.filter(query, sent_on__range=(date_diff, datetime.datetime.now())).all().order_by('urn')
+
+    @classmethod
     def clean_message_urn(cls, message):
         if 'tel:' in message.urn:
             return message.urn[4:]
