@@ -14,7 +14,7 @@ from django.db.models import Q
 from temba_client.v2 import TembaClient
 
 tz = 'Africa/Kampala'
-week = (datetime.datetime.now() - datetime.timedelta(7)).isoformat()
+week = (datetime.datetime.now() - datetime.timedelta(1)).isoformat()
 
 
 class Workspace(models.Model):

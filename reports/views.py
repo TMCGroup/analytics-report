@@ -652,7 +652,6 @@ def send_csv_attachment_email(request, project_id):
 
     return csv_file
 
-
 @staff_member_required
 def send_report_email(request, project_id):
     project = Project.objects.get(id=project_id)
@@ -666,3 +665,16 @@ def send_report_email(request, project_id):
     email.send()
 
     return HttpResponse('email(s) sent')
+
+
+def email_report(project_id):
+    project = Project.objects.get(id=project_id)
+    report_datetime = datetime.datetime.now()
+    pdf = generate_pdf_weekly_report(request, project.id)
+    csv_file = send_csv_attachment_email(request, project.id)
+    email = Email.get_report_emails(project.id)
+    email.attach('%s_report_%s.pdf' % (project.name, report_datetime), pdf, 'application/pdf')
+    email.attach('%s_report_%s.csv' % (project.name, report_datetime), csv_file, 'text/csv')
+    # email.content_subtype = "html"
+    email.send()
+
