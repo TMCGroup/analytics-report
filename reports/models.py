@@ -14,7 +14,7 @@ from django.db.models import Q
 from temba_client.v2 import TembaClient
 
 tz = 'Africa/Kampala'
-yesterday = (datetime.datetime.now() - datetime.timedelta(7)).isoformat()
+week = (datetime.datetime.now() - datetime.timedelta(7)).isoformat()
 
 
 class Workspace(models.Model):
@@ -211,12 +211,11 @@ class Contact(models.Model):
 
                     added += 1
 
-        contacts = Contact.objects.all()
-        workspaces = Workspace.objects.all()
-        for workspace in workspaces:
-            client = TembaClient(workspace.host, workspace.key)
-            for contact in contacts:
-                Message.save_messages(client, contact)
+                contact = Contact.objects.filter(uuid=contact.uuid).first()
+                workspaces = Workspace.objects.all()
+                for workspace in workspaces:
+                    client = TembaClient(workspace.host, workspace.key)
+                    Message.save_messages(client, contact)
 
         return added
 
@@ -348,7 +347,7 @@ class Message(models.Model):
     @classmethod
     def save_messages(cls, client, contact):
         added = 0
-        for message_batch in client.get_messages(contact=contact, after=yesterday).iterfetches(
+        for message_batch in client.get_messages(contact=contact, after=week).iterfetches(
                 retry_on_rate_exceed=True):
             for message in message_batch:
                 if not cls.message_exists(message):
