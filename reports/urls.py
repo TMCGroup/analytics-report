@@ -12,7 +12,7 @@ urlpatterns = [
     #                                                          'authentication_form': EmailAuthenticationForm,
     #                                                          'redirect_field_name': 'post',
     #                                                          }),
-    url(r'^home/$', dashboard, name='dashboard'),
+    url(r'^$', dashboard, name='dashboard'),
     url(r'^home/$', dashboard_nav, name='dashboard-nav'),
     url(r'^report/view-1/(?P<project_id>[\-\w]+)/$', report_template_one, name='template_one'),
     url(r'^report/email/csv/(?P<project_id>[\-\w]+)/$', send_csv_attachment_email, name='email-csv'),

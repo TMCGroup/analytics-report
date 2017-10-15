@@ -8,7 +8,6 @@ from django.core.mail import EmailMessage
 from django.http import HttpResponse
 from django.shortcuts import render, render_to_response
 from django.template.loader import render_to_string
-
 from reports.templatetags import report_tags
 from .models import Contact, Message, Group, CampaignEvent, Project, Voice, Email
 from nvd3 import pieChart, cumulativeLineChart, discreteBarChart, scatterChart
@@ -24,6 +23,7 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
 from django.forms import ValidationError
 from django.conf import settings
+from django.contrib.admin.views.decorators import staff_member_required
 
 tz = 'Africa/Kampala'
 
@@ -42,7 +42,7 @@ class EmailAuthenticationForm(AuthenticationForm):
                 )
         return username
 
-
+@staff_member_required
 @cache_page(60 * 15)
 def dashboard(request):
     projects = Project.get_all_projects()
@@ -103,6 +103,7 @@ def dashboard_nav(request):
     return render(request, 'adminlte/lib/_main_sidebar.html', locals())
 
 
+@staff_member_required
 @cache_page(60 * 15)
 def report_template_one(request, project_id):
     projects = Project.get_all_projects()
@@ -222,7 +223,7 @@ def message_in(message, direction):
     else:
         return " "
 
-
+@staff_member_required
 def export_to_csv_all_messages(request, project_id):
     project = Project.objects.get(id=project_id)
     datetime_variable = datetime.datetime.now()
@@ -264,6 +265,7 @@ def export_to_csv_all_messages(request, project_id):
     return response
 
 
+@staff_member_required
 @cache_page(60 * 15)
 def view_all_project_groups(request, project_id):
     projects = Project.get_all_projects()
@@ -273,6 +275,7 @@ def view_all_project_groups(request, project_id):
     return render(request, 'report/project_groups.html', locals())
 
 
+@staff_member_required
 @cache_page(60 * 15)
 def view_all_project_weekly_contacts(request, project_id):
     projects = Project.get_all_projects()
@@ -288,6 +291,7 @@ def view_all_project_weekly_contacts(request, project_id):
     return render(request, 'report/weekly_project_contacts.html', locals())
 
 
+@staff_member_required
 @cache_page(60 * 15)
 def view_all_project_contacts(request, project_id):
     projects = Project.get_all_projects()
@@ -303,6 +307,7 @@ def view_all_project_contacts(request, project_id):
     return render(request, 'report/project_contacts.html', locals())
 
 
+@staff_member_required
 @cache_page(60 * 15)
 def view_all_project_weekly_failed_messages(request, project_id):
     projects = Project.get_all_projects()
@@ -323,6 +328,7 @@ def view_all_project_weekly_failed_messages(request, project_id):
     return render(request, 'report/weekly_project_failed_messages.html', locals())
 
 
+@staff_member_required
 @cache_page(60 * 15)
 def view_all_project_weekly_hanging_messages(request, project_id):
     projects = Project.get_all_projects()
@@ -343,12 +349,14 @@ def view_all_project_weekly_hanging_messages(request, project_id):
     return render(request, 'report/weekly_project_hanging_messages.html', locals())
 
 
+@staff_member_required
 def view_all_project_weekly_voice_interactions(request, project_id):
     project = Project.objects.get(id=project_id)
     voice_interactions = Voice.objects.filter(project=project).all()
     return render(request, 'report/weekly_project_voice_interactions.html', locals())
 
 
+@staff_member_required
 @cache_page(60 * 15)
 def export_to_csv(request, project_id):
     project = Project.objects.get(id=project_id)
@@ -446,6 +454,7 @@ def export_to_csv(request, project_id):
     return response
 
 
+@staff_member_required
 def generate_pdf_weekly_report(request, project_id):
     buffer = StringIO()
     doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=72, leftMargin=72, topMargin=20, bottomMargin=20)
@@ -543,6 +552,7 @@ def generate_pdf_weekly_report(request, project_id):
     return pdf
 
 
+@staff_member_required
 def send_csv_attachment_email(request, project_id):
     buffer = StringIO()
     project = Project.objects.get(id=project_id)
@@ -643,6 +653,7 @@ def send_csv_attachment_email(request, project_id):
     return csv_file
 
 
+@staff_member_required
 def send_report_email(request, project_id):
     project = Project.objects.get(id=project_id)
     report_datetime = datetime.datetime.now()

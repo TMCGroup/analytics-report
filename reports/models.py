@@ -34,9 +34,9 @@ class Workspace(models.Model):
             client = TembaClient(workspace.host, workspace.key)
             Group.add_groups(client=client)
             Contact.save_contacts(client=client)
-            contacts = Contact.objects.all()
-            for contact in contacts:
-                Message.save_messages(client, contact)
+            # contacts = Contact.objects.all().order_by('-created_at')
+            # for contact in contacts:
+            #     Message.save_messages(client, contact)
             Flow.add_flows(client=client)
             Run.add_runs(client=client)
             Campaign.add_campaigns(client=client)
@@ -179,7 +179,7 @@ class Contact(models.Model):
     @classmethod
     def save_contacts(cls, client):
         added = 0
-        for contact_batch in client.get_contacts(after=yesterday).iterfetches(retry_on_rate_exceed=True):
+        for contact_batch in client.get_contacts().iterfetches(retry_on_rate_exceed=True):
             for contact in contact_batch:
                 groups = []
                 if contact.groups is not None:
@@ -211,11 +211,12 @@ class Contact(models.Model):
 
                     added += 1
 
-                # contact = Contact.objects.filter(uuid=contact.uuid) **Only looked at new added contacts**
-                # workspaces = Workspace.objects.all()
-                # for workspace in workspaces:
-                #     client = TembaClient(workspace.host, workspace.key)
-                #     Message.save_messages(client, contact)
+        contacts = Contact.objects.all()
+        workspaces = Workspace.objects.all()
+        for workspace in workspaces:
+            client = TembaClient(workspace.host, workspace.key)
+            for contact in contacts:
+                Message.save_messages(client, contact)
 
         return added
 
