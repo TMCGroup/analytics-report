@@ -42,6 +42,7 @@ class EmailAuthenticationForm(AuthenticationForm):
                 )
         return username
 
+
 @staff_member_required
 @cache_page(60 * 15)
 def dashboard(request):
@@ -52,6 +53,7 @@ def dashboard(request):
         groups_list.append(group.name)
 
     contacts = Contact.get_all_contacts()
+    contacts_count = contacts.count()
     registered_contacts = Contact.get_all_registered_contacts(groups_list)
     registered_contacts_list = []
     for contact in registered_contacts:
@@ -63,7 +65,9 @@ def dashboard(request):
     percentage_registered_contacts = Contact.get_all_contacts_percentage(registered_contacts.count(), groups_list)
     percentage_unregistered_contacts = Contact.get_all_contacts_percentage(unregistered_contacts.count(), groups_list)
     incoming_messages = Message.get_all_incoming_messages()
+    incoming_messages_count = incoming_messages.count()
     outgoing_messages = Message.get_all_outgoing_messages()
+    outgoing_messages_count = outgoing_messages.count()
     messages_cost = Message.get_cost_of_incoming_messages(incoming_messages.count()) + Message. \
         get_cost_of_outgoing_messages(outgoing_messages.count())
     registered_incoming_messages = Message.get_all_specific_incoming_messages(registered_contacts_list)
@@ -210,6 +214,72 @@ def report_template_one(request, project_id):
     return render(request, 'report/template_one.html', locals())
 
 
+@staff_member_required
+#@cache_page(60 * 15)
+def view_whole_project(request, project_id):
+    projects = Project.get_all_projects()
+    project = Project.objects.get(id=project_id)
+    project_groups = project.group.all()
+    top_five_project_groups = project.group.all().order_by('-count')[:5]
+    project_groups_count = project.group.count()
+    project_group_list = Project.get_project(name=project.name)
+    voice_platform = Voice.get_weekly_voice_interaction(project=project)
+    top_five_voice_interactions = voice_platform.order_by('-created_on')[:5]
+
+    group_list = []
+    for group in project_groups:
+        group_list.append(group.name)
+
+    contacts = Contact.get_project_contacts(project_groups_list=group_list)
+    contact_urns_list = []
+    for contact in contacts:
+        contact_urns_list.append(contact.urns)
+
+    number_of_contacts = len(contact_urns_list)
+    outgoing_messages = Message.get_all_project_outgoing_messages(contact_urns_list)
+    incoming_messages = Message.get_all_project_incoming_messages(contact_urns_list)
+    weekly_sent_messages = Message.get_all_project_outgoing_messages(contact_urns_list)
+    weekly_delivered_messages = Message.get_all_project_outgoing_messages(contact_urns_list).filter(status='delivered')
+    weekly_failed_messages = Message.get_weekly_failed_messages(contact_urns_list).filter(status='failed')
+    weekly_hanging_messages = outgoing_messages.count() - weekly_delivered_messages.count()
+
+    weekly_delivered_messages_set = weekly_delivered_messages.count()
+    weekly_failed_messages_set = weekly_failed_messages.count()
+    weekly_hanging_messages_set = weekly_hanging_messages
+
+    percentage_weekly_delivered_messages = str(
+        round(float(weekly_delivered_messages.count()) / float(weekly_sent_messages.count())
+              * 100, 1))
+
+    percentage_weekly_hanging_messages = str(
+        round(float(weekly_hanging_messages) / float(weekly_sent_messages.count())
+              * 100, 1))
+
+    percentage_weekly_failed_messages = str(
+        round(float(weekly_failed_messages.count()) / float(weekly_sent_messages.count())
+              * 100, 1))
+
+    x1_data = ['Delivered', 'Failed', 'Hanging']
+    y1_data = [weekly_delivered_messages_set, weekly_failed_messages_set, weekly_hanging_messages_set]
+
+    color_list = ['#008000', '#DC143C', '#FFD700']
+    extra_serie = {
+        "tooltip": {"y_start": "", "y_end": " messages"},
+        "color_list": color_list
+    }
+    chart1_data = {'x': x1_data, 'y1': y1_data, 'extra1': extra_serie}
+    chart1_type = "pieChart"
+    chart1_container = 'piechart_container'  # container name
+    extra = {
+        'x_is_date': False,
+        'x_axis_format': '',
+        'tag_script_js': True,
+        'jquery_on_ready': False,
+    }
+
+    return render(request, 'report/whole_project.html', locals())
+
+
 def message_out(message, direction):
     if direction is "out":
         return message
@@ -222,6 +292,7 @@ def message_in(message, direction):
         return message
     else:
         return " "
+
 
 @staff_member_required
 def export_to_csv_all_messages(request, project_id):
@@ -652,6 +723,7 @@ def send_csv_attachment_email(request, project_id):
 
     return csv_file
 
+
 @staff_member_required
 def send_report_email(request, project_id):
     project = Project.objects.get(id=project_id)
@@ -677,4 +749,3 @@ def email_report(project_id):
     email.attach('%s_report_%s.csv' % (project.name, report_datetime), csv_file, 'text/csv')
     # email.content_subtype = "html"
     email.send()
-

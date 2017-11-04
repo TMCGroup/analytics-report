@@ -14,7 +14,9 @@ from django.db.models import Q
 from temba_client.v2 import TembaClient
 
 tz = 'Africa/Kampala'
-week = (datetime.datetime.now() - datetime.timedelta(1)).isoformat()
+day = (datetime.datetime.now() - datetime.timedelta(1)).isoformat()
+week = (datetime.datetime.now() - datetime.timedelta(7)).isoformat()
+month = (datetime.datetime.now() - datetime.timedelta(30)).isoformat()
 
 
 class Workspace(models.Model):
@@ -34,9 +36,6 @@ class Workspace(models.Model):
             client = TembaClient(workspace.host, workspace.key)
             Group.add_groups(client=client)
             Contact.save_contacts(client=client)
-            # contacts = Contact.objects.all().order_by('-created_at')
-            # for contact in contacts:
-            #     Message.save_messages(client, contact)
             Flow.add_flows(client=client)
             Run.add_runs(client=client)
             Campaign.add_campaigns(client=client)
@@ -200,7 +199,6 @@ class Contact(models.Model):
                                                                  modified_on=contact.modified_on)
 
                 else:
-
                     cls.objects.create(uuid=contact.uuid, name=contact.name,
                                        language=contact.language,
                                        urns=cls.clean_contacts(contact), groups=groups,
@@ -347,8 +345,9 @@ class Message(models.Model):
     @classmethod
     def save_messages(cls, client, contact):
         added = 0
-        for message_batch in client.get_messages(contact=contact, after=week).iterfetches(
-                retry_on_rate_exceed=True):
+        for message_batch in client.get_messages(contact=contact.uuid, after=day).iterfetches(
+                retry_on_rate_exceed=True):  # to get all messages including failed filter by contact.uuid instead
+            # of folder
             for message in message_batch:
                 if not cls.message_exists(message):
                     if not Contact.objects.filter(uuid=message.contact.uuid).exists():
@@ -496,6 +495,12 @@ class Message(models.Model):
         date_diff = datetime.datetime.now() - datetime.timedelta(days=42)
         return cls.objects.filter(query, sent_on__range=(date_diff, datetime.datetime.now())).all().order_by('urn')
 
+    # @classmethod
+    # def get_all_project_outgoing_messages(cls, contacts_list):
+    #     query = reduce(operator.or_, (Q(urn__contains=contact) for contact in contacts_list))
+    #     date_diff = datetime.datetime.now() - datetime.timedelta(days=42)
+    #     return cls.objects.filter(query, sent_on__range=(date_diff, datetime.datetime.now())).all().order_by('urn')
+
     @classmethod
     def clean_message_urn(cls, message):
         if 'tel:' in message.urn:
@@ -609,7 +614,7 @@ class Run(models.Model):
     @classmethod
     def add_runs(cls, client):
         added = 0
-        for run_batch in client.get_runs(after=yesterday).iterfetches(retry_on_rate_exceed=True):
+        for run_batch in client.get_runs(after=week).iterfetches(retry_on_rate_exceed=True):
             for run in run_batch:
                 if not cls.run_exists(run):
                     if not (Contact.objects.filter(uuid=run.contact.uuid).exists() & Flow.objects.filter

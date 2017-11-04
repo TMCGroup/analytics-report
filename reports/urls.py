@@ -15,6 +15,7 @@ urlpatterns = [
     url(r'^$', dashboard, name='dashboard'),
     url(r'^home/$', dashboard_nav, name='dashboard-nav'),
     url(r'^report/view-1/(?P<project_id>[\-\w]+)/$', report_template_one, name='template_one'),
+    url(r'^report/whole/(?P<project_id>[\-\w]+)/$', view_whole_project, name='view-whole-project'),
     url(r'^report/email/csv/(?P<project_id>[\-\w]+)/$', send_csv_attachment_email, name='email-csv'),
     url(r'^report/csv/(?P<project_id>[\-\w]+)/$', export_to_csv, name='csv'),
     url(r'^report/csv/messages/(?P<project_id>[\-\w]+)/$', export_to_csv_all_messages, name='csv-messages'),

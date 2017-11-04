@@ -1,0 +1,345 @@
+{% extends 'report/base.html' %}
+{% load static %}
+{% load report_tags %}
+{% load nvd3_tags %}
+{% block title %}{{ project.name }} - Report View One - TMCG {% endblock %}
+
+{% block chart %}
+    {% load_chart chart1_type chart1_data chart1_container extra %}
+    {% load_chart chart2_type chart2_data chart2_container extra2 %}
+{% endblock %}
+
+{% block content %}
+    {% for project_group in project_group_list %}
+
+    <div class="row">
+    <div class="col-md-4 col-sm-6 col-xs-12">
+          <div class="info-box">
+            <span class="info-box-icon bg-aqua"><i class="fa fa-users"></i></span>
+
+            <div class="info-box-content">
+              <span class="info-box-text"><a href="{% url 'all-project-contacts' project.id %}">Contacts</a></span>
+              <span class="info-box-number">{{ contacts.count }}</span>
+            </div>
+            <!-- /.info-box-content -->
+          </div>
+          <!-- /.info-box -->
+    </div>
+    <div class="col-md-4 col-sm-6 col-xs-12">
+          <div class="info-box">
+            <span class="info-box-icon bg-green"><i class="fa fa-envelope-o"></i></span>
+
+            <div class="info-box-content">
+              <span class="info-box-text">Incoming Texts</span>
+              <span class="info-box-number">{{ incoming_messages.count }}</span>
+            </div>
+            <!-- /.info-box-content -->
+          </div>
+          <!-- /.info-box -->
+    </div>
+    <div class="col-md-4 col-sm-6 col-xs-12">
+          <div class="info-box">
+            <span class="info-box-icon bg-green"><i class="fa  fa-envelope"></i></span>
+
+            <div class="info-box-content">
+              <span class="info-box-text">Outgoing Texts</span>
+              <span class="info-box-number">{{ outgoing_messages.count }}</span>
+            </div>
+            <!-- /.info-box-content -->
+          </div>
+          <!-- /.info-box -->
+    </div>
+{#    <div class="col-md-3 col-sm-6 col-xs-12">#}
+{#          <div class="info-box">#}
+{#            <span class="info-box-icon bg-yellow"><i class="fa fa-money"></i></span>#}
+{##}
+{#            <div class="info-box-content">#}
+{#              <span class="info-box-text">Messages Cost</span>#}
+{#              <span class="info-box-number">{{ project_messages_cost }}<small>Shs</small></span>#}
+{#            </div>#}
+{#            <!-- /.info-box-content -->#}
+{#          </div>#}
+{#          <!-- /.info-box -->#}
+{#    </div>#}
+    </div>
+
+    <div class="row">
+    <div class="box">
+    <div class="box-header with-border">
+        <h3 class="box-title">{{ project.name }} Message Delivery Summary</h3>
+    </div>
+    <div class="box-body">
+        <div class="col-md-6 col-sm-12 col-xs-12">
+
+            {% include_container chart1_container  600 400 %}
+        </div>
+        <div class="row">
+{#                <div class="col-sm-3 col-xs-6">#}
+{#                  <div class="description-block border-right">#}
+{#                    <span class="description-percentage text-green"><i class="fa fa-caret-up">#}
+{#                    </i> {{ weekly_contact_percentage }}%</span>#}
+{#                    <h5 class="description-header">{{ weekly_contacts.count }}</h5>#}
+{#                    <span class="description-text">New weekly contacts</span>#}
+{#                  </div>#}
+{#                  <!-- /.description-block -->#}
+{#                </div>#}
+                <!-- /.col -->
+                <div class="col-sm-4 col-xs-6">
+                  <div class="description-block border-right">
+                    <span class="description-percentage text-yellow"><i class="fa fa-caret-left"></i>
+                        {{ percentage_weekly_hanging_messages }}%</span>
+                    <h5 class="description-header">{{ weekly_hanging_messages}}</h5>
+                    <span class="description-text">Hanging/Wired Messages</span>
+                  </div>
+                  <!-- /.description-block -->
+                </div>
+                <!-- /.col -->
+                <div class="col-sm-4 col-xs-6">
+                  <div class="description-block border-right">
+                    <span class="description-percentage text-green"><i class="fa fa-caret-up"></i>
+                        {{ percentage_weekly_delivered_messages }}%</span>
+                    <h5 class="description-header">{{ weekly_delivered_messages.count }}</h5>
+                    <span class="description-text">Delivered Messages</span>
+                  </div>
+                  <!-- /.description-block -->
+                </div>
+                <!-- /.col -->
+                <div class="col-sm-4 col-xs-6">
+                  <div class="description-block">
+                    <span class="description-percentage text-red"><i class="fa fa-caret-down"></i>
+                        {{ percentage_weekly_failed_messages }}%</span>
+                    <h5 class="description-header">{{ weekly_failed_messages.count }}</h5>
+                    <span class="description-text">Failed Messages</span>
+                  </div>
+                  <!-- /.description-block -->
+                </div>
+              </div>
+{#        <div class="col-md-6 col-sm-6 col-xs-6">#}
+{#            {% include_container chart2_container  400 400 %}#}
+{#            <br>{{ x2_data }}#}
+{#            <br>{{ y2_data }}#}
+{#            <br>{{ y2_data1 }}#}
+{#        </div>#}
+
+    </div>
+    <div class="box-footer">
+              <div class="row">
+                <div class="col-sm-3 col-xs-6">
+                  <div class="description-block border-right">
+                    <span class="description-percentage text-green"><i class="fa fa-caret-up">
+                    </i> {{ weekly_contact_percentage }}%</span>
+                    <h5 class="description-header">{{ weekly_contacts.count }}</h5>
+                    <span class="description-text">New weekly contacts</span>
+                  </div>
+                  <!-- /.description-block -->
+                </div>
+                <!-- /.col -->
+                <div class="col-sm-3 col-xs-6">
+                  <div class="description-block border-right">
+                    <span class="description-percentage text-yellow"><i class="fa fa-caret-left"></i>
+                        {{ percentage_weekly_hanging_messages }}%</span>
+                    <h5 class="description-header">{{ weekly_hanging_messages.count }}</h5>
+                    <span class="description-text">Weekly Hanging/Wired Messages</span>
+                  </div>
+                  <!-- /.description-block -->
+                </div>
+                <!-- /.col -->
+                <div class="col-sm-3 col-xs-6">
+                  <div class="description-block border-right">
+                    <span class="description-percentage text-green"><i class="fa fa-caret-up"></i>
+                        {{ percentage_weekly_delivered_messages }}%</span>
+                    <h5 class="description-header">{{ weekly_delivered_messages.count }}</h5>
+                    <span class="description-text">Weekly Delivered Messages</span>
+                  </div>
+                  <!-- /.description-block -->
+                </div>
+                <!-- /.col -->
+                <div class="col-sm-3 col-xs-6">
+                  <div class="description-block">
+                    <span class="description-percentage text-red"><i class="fa fa-caret-down"></i>
+                        {{ percentage_weekly_failed_messages }}%</span>
+                    <h5 class="description-header">{{ weekly_failed_messages.count }}</h5>
+                    <span class="description-text">Weekly Failed Messages</span>
+                  </div>
+                  <!-- /.description-block -->
+                </div>
+              </div>
+              <!-- /.row -->
+    </div>
+
+    </div>
+    </div>
+
+{% if number_of_contacts > 0 %} <!-- Very important line to prevent breaking when the contact list for getting messages
+                                is empty -->
+
+    {% if weekly_failed_messages.count > 0 %}
+        <div class="row">
+            <div class="box">
+            <div class="box-header with-border">
+                <h3 class="box-title">{{ project.name }} Weekly Failed to Send Messages</h3>
+            </div>
+            <div class="box-body">
+            <div class="container-fluid">
+
+                    <table class="striped" style="line-height: 12px">
+                        <tr><th>Contact Number</th><th>Text</th><th>Sent On</th></tr>
+                        {% for weekly_failed_message in top_five_weekly_failed_messages %}
+                        <tr>
+                            <td>{{ weekly_failed_message.urn }}</td>
+                            <td>{{ weekly_failed_message.text }}</td>
+                            <td>{{ weekly_failed_message.sent_on }}</td>
+                        </tr>
+                        {% endfor %}
+                    </table>
+
+            </div>
+            </div>
+            {% if weekly_failed_messages.count > 5  %}
+            <div class="box-footer clearfix no-border">
+                <a href="{% url 'all-project-weekly-failed-messages' project.id %}" type="button" class="btn btn-default pull-right"><i class="fa fa-arrow-circle-right"></i>
+                View All Weekly Failed Messages</a>
+            </div>
+            {% endif %}
+            </div>
+        </div>
+    {% endif %}
+
+    {% if weekly_hanging_messages.count > 0 %}
+        <div class="row">
+            <div class="box">
+            <div class="box-header with-border">
+                <h3 class="box-title">{{ project.name }} Weekly Hanging Messages</h3>
+            </div>
+            <div class="box-body">
+            <div class="container-fluid">
+
+                    <table class="striped" style="line-height: 12px">
+                        <tr><th>Contact Number</th><th>Text</th><th>Sent On</th></tr>
+                        {% for weekly_hanging_message in top_five_weekly_hanging_messages %}
+                        <tr>
+                            <td>{{ weekly_hanging_message.urn }}</td>
+                            <td>{{ weekly_hanging_message.text }}</td>
+                            <td>{{ weekly_hanging_message.sent_on }}</td>
+                        </tr>
+                        {% endfor %}
+                    </table>
+
+            </div>
+            </div>
+            {% if weekly_hanging_messages.count > 5 %}
+            <div class="box-footer clearfix no-border">
+               <a href="{% url 'all-project-weekly-hanging-messages' project.id %}" type="button" class="btn btn-default pull-right"><i class="fa fa-arrow-circle-right"></i>
+                View All Weekly Hanging messages</a>
+            </div>
+            {% endif %}
+            </div>
+        </div>
+    {% endif %}
+
+   {% if voice_platform.count > 0 %}
+        <div class="row">
+            <div class="box">
+            <div class="box-header with-border">
+                <h3 class="box-title">{{ project.name }} Weekly Voice Interactions</h3>
+            </div>
+            <div class="box-body">
+            <div class="container-fluid">
+
+                    <table class="striped" style="line-height: 12px">
+                        <tr><th>Contact Number</th><th>Reason for Call</th><th>Call Agent</th><th>Date</th></tr>
+                        {% for voice_interaction in top_five_voice_interactions %}
+                        <tr>
+                            <td>{{ voice_interaction.contact }}</td>
+                            <td>{{ voice_interaction.reason }}</td>
+                            <td>{{ voice_interaction.created_by }}</td>
+                            <td>{{ voice_interaction.created_on }}</td>
+                        </tr>
+                        {% endfor %}
+                    </table>
+
+            </div>
+            </div>
+            {% if voice_platform.count > 5 %}
+            <div class="box-footer clearfix no-border">
+                <a href="{% url 'all-project-weekly-voice-interactions' project.id %}" type="button" class="btn btn-default pull-right"><i class="fa fa-arrow-circle-right"></i>
+                View All Voice Interactions</a>
+            </div>
+            {% endif %}
+            </div>
+        </div>
+    {% endif %}
+
+{% endif %} <!-- closing the very important contacts list count used in messages -->
+
+    <div class="row">
+    {% if project_groups_count > 0 %}
+    <div class="col-lg-6 col-md-6 col-sm-3 col-xs-6">
+        <div class="box">
+        <div class="box-header with-border">
+            <h3 class="box-title">{{ project.name }} Groups</h3>
+        </div>
+        <div class="box-body">
+        <div class="container-fluid">
+                <table class="striped" style="line-height: 12px">
+                    <tr><th>Group Name</th><th>Number of Contacts</th></tr>
+                    {% for group in top_five_project_groups %}
+                    <tr>
+                        <td>{{ group.name }}</td>
+                        <td>{{ group.count }}</td>
+                    </tr>
+                    {% endfor %}
+                </table>
+        </div>
+        </div>
+        {% if project_groups.count > 5 %}
+        <div class="box-footer clearfix no-border">
+            <a href="{% url 'all-project-groups' project.id %}" type="button"
+                    class="btn btn-default pull-right"><i class="fa fa-arrow-circle-right"></i>
+            View All Groups</a>
+        </div>
+        {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% if weekly_contacts.count > 0 %}
+    <div class="col-lg-6 col-md-6 col-sm-3 col-xs-6">
+        <div class="box">
+        <div class="box-header with-border">
+            <h3 class="box-title">{{ project.name }} Weekly Enrolled Contacts</h3>
+        </div>
+        <div class="box-body">
+        <div class="container-fluid">
+                <table class="striped" style="line-height: 12px">
+                    <tr><th>Name</th><th>Number</th><th>Groups</th><th>Created On</th></tr>
+                    {% for contact in top_five_weekly_contacts %}
+                    <tr>
+                        <td>{{ contact.name }}</td>
+                        <td>{{ contact.urns }}</td>
+                        <td>{% clean contact.groups as groups %}{% for g in groups %}<ul><li>{{ g }}</li></ul>
+                        {% endfor %}</td>
+                        <td>{{ contact.created_on }}</td>
+                    </tr>
+                    {% endfor %}
+                </table>
+        </div>
+        </div>
+        {% if weekly_contacts.count > 5 %}
+        <div class="box-footer clearfix no-border">
+            <a href="{% url 'all-project-weekly-contacts' project.id %}" type="button"
+                    class="btn btn-default pull-right"><i class="fa fa-arrow-circle-right"></i>
+            View All Weekly Enrolled Contacts</a>
+        </div>
+        {% endif %}
+        </div>
+    </div>
+    {% endif %}
+    </div>
+
+{{ emails }}
+
+{% endfor %} <!-- ending starting for loop project groups specific -->
+{% endblock %}
+
+
