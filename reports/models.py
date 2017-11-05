@@ -17,7 +17,7 @@ tz = 'Africa/Kampala'
 day = (datetime.datetime.now() - datetime.timedelta(1)).isoformat()
 week = (datetime.datetime.now() - datetime.timedelta(7)).isoformat()
 month = (datetime.datetime.now() - datetime.timedelta(30)).isoformat()
-
+year = (datetime.datetime.now() - datetime.timedelta(365)).isoformat()
 
 class Workspace(models.Model):
     name = models.CharField(max_length=200)
@@ -178,7 +178,7 @@ class Contact(models.Model):
     @classmethod
     def save_contacts(cls, client):
         added = 0
-        for contact_batch in client.get_contacts().iterfetches(retry_on_rate_exceed=True):
+        for contact_batch in client.get_contacts(after=year).iterfetches(retry_on_rate_exceed=True):
             for contact in contact_batch:
                 groups = []
                 if contact.groups is not None:
