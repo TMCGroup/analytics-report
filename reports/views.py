@@ -43,6 +43,10 @@ class EmailAuthenticationForm(AuthenticationForm):
         return username
 
 
+def index(request):
+    return render(request, 'report/index.html')
+
+
 @staff_member_required
 @cache_page(60 * 15)
 def dashboard(request):
@@ -215,7 +219,7 @@ def report_template_one(request, project_id):
 
 
 @staff_member_required
-#@cache_page(60 * 15)
+# @cache_page(60 * 15)
 def view_whole_project(request, project_id):
     projects = Project.get_all_projects()
     project = Project.objects.get(id=project_id)

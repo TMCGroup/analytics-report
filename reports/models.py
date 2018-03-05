@@ -16,7 +16,7 @@ from temba_client.v2 import TembaClient
 tz = 'Africa/Kampala'
 day = (datetime.datetime.now() - datetime.timedelta(1)).isoformat()
 week = (datetime.datetime.now() - datetime.timedelta(7)).isoformat()
-month = (datetime.datetime.now() - datetime.timedelta(30)).isoformat()
+month = (datetime.datetime.now() - datetime.timedelta(90)).isoformat()
 year = (datetime.datetime.now() - datetime.timedelta(365)).isoformat()
 
 class Workspace(models.Model):
@@ -178,7 +178,7 @@ class Contact(models.Model):
     @classmethod
     def save_contacts(cls, client):
         added = 0
-        for contact_batch in client.get_contacts(after=year).iterfetches(retry_on_rate_exceed=True):
+        for contact_batch in client.get_contacts(after=month).iterfetches(retry_on_rate_exceed=True):
             for contact in contact_batch:
                 groups = []
                 if contact.groups is not None:
@@ -345,7 +345,7 @@ class Message(models.Model):
     @classmethod
     def save_messages(cls, client, contact):
         added = 0
-        for message_batch in client.get_messages(contact=contact.uuid, after=day).iterfetches(
+        for message_batch in client.get_messages(contact=contact.uuid, after=month).iterfetches(
                 retry_on_rate_exceed=True):  # to get all messages including failed filter by contact.uuid instead
             # of folder
             for message in message_batch:
