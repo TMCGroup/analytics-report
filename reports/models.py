@@ -12,6 +12,7 @@ from django.template.loader import render_to_string
 from django.db import models
 from django.db.models import Q
 from temba_client.v2 import TembaClient
+import mysql.connector
 
 tz = 'Africa/Kampala'
 day = (datetime.datetime.now() - datetime.timedelta(1)).isoformat()
@@ -784,3 +785,44 @@ class Voice(models.Model):
 
     def __unicode__(self):
         return str(self.project)
+
+
+class ArtContact(models.Model):
+    voice_id = models.IntegerField()
+    name = models.CharField(max_length=225, null=True)
+    language_preference = models.IntegerField()
+    gender = models.CharField(max_length=20)
+    age = models.DateField()
+    district = models.IntegerField()
+    area = models.CharField(max_length=225)
+    designation = models.CharField(max_length=225)
+    sector = models.IntegerField()
+    telephone_number = models.IntegerField()
+    alt_number = models.CharField(max_length=225)
+    date_of_consent = models.DateField()
+    art_type = models.CharField(max_length=50)
+    more_info = models.CharField(max_length=225)
+    status = models.IntegerField()
+    created_at = models.DateTimeField()
+    created_by = models.IntegerField()
+
+    @classmethod
+    def fetch_voice_art_contact_data(cls):
+        voice_server_connection = mysql.connector.connect(host='voice.tmcg.co.ug', database='cdr', user='view',
+                                                          password='Select')
+        voice_cur = voice_server_connection.cursor()
+        voice_cur.execute("SELECT * from art")
+        voice_results = voice_cur.fetchall()
+
+        for item in voice_results:
+            if not cls.art_contact_exists(item[0]):
+                cls.objects.create(voice_id=item[0], name=item[1], language_preference=item[2], gender=item[3],
+                                   age=item[4], district=item[5], area=item[6], designation=item[7], sector=item[8],
+                                   telephone_number=item[9], alt_number=item[10], date_of_consent=item[11],
+                                   art_type=item[12], more_info=item[13], status=item[14], created_at=item[15],
+                                   created_by=item[16])
+
+
+    @classmethod
+    def art_contact_exists(cls, voice_id):
+        return cls.objects.filter(voice_id=voice_id).exists()
