@@ -788,23 +788,23 @@ class Voice(models.Model):
 
 
 class ArtContact(models.Model):
-    voice_id = models.IntegerField()
+    voice_id = models.BigIntegerField()
     name = models.CharField(max_length=225, null=True)
-    language_preference = models.IntegerField()
+    language_preference = models.BigIntegerField()
     gender = models.CharField(max_length=20)
     age = models.DateField()
-    district = models.IntegerField()
+    district = models.BigIntegerField()
     area = models.CharField(max_length=225)
     designation = models.CharField(max_length=225)
-    sector = models.IntegerField()
-    telephone_number = models.IntegerField()
+    sector = models.BigIntegerField()
+    telephone_number = models.BigIntegerField()
     alt_number = models.CharField(max_length=225)
     date_of_consent = models.DateField()
     art_type = models.CharField(max_length=50)
     more_info = models.CharField(max_length=225)
-    status = models.IntegerField()
+    status = models.BigIntegerField()
     created_at = models.DateTimeField()
-    created_by = models.IntegerField()
+    created_by = models.BigIntegerField()
 
     @classmethod
     def fetch_voice_art_contact_data(cls):

@@ -1,5 +1,6 @@
 from django.contrib import admin
-from .models import Contact, Group, Run, Flow, Message, Workspace, Project, CampaignEvent, Campaign, Voice, Email, Value
+from .models import Contact, Group, Run, Flow, Message, Workspace, Project, CampaignEvent, Campaign, Voice, Email, \
+    Value, ArtContact
 
 
 class EmailAdmin(admin.ModelAdmin):
@@ -83,3 +84,4 @@ admin.site.register(Flow, FlowAdmin)
 admin.site.register(Campaign)
 admin.site.register(CampaignEvent)
 admin.site.register(Value, ValueAdmin)
+admin.site.register(ArtContact)
