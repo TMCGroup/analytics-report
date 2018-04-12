@@ -826,3 +826,53 @@ class ArtContact(models.Model):
     @classmethod
     def art_contact_exists(cls, voice_id):
         return cls.objects.filter(voice_id=voice_id).exists()
+
+
+class CDR(models.Model):
+    acctid = models.BigIntegerField()
+    calldate = models.DateTimeField(null=True)
+    clid = models.CharField(max_length=80, null=True)
+    src = models.CharField(max_length=80, null=True)
+    dst = models.CharField(max_length=80, null=True)
+    dcontext = models.CharField(max_length=80, null=True)
+    channel = models.CharField(max_length=80, null=True)
+    dstchannel = models.CharField(max_length=80, null=True)
+    lastapp = models.CharField(max_length=80, null=True)
+    lastdata = models.CharField(max_length=80, null=True)
+    duration = models.IntegerField(null=True)
+    billsec = models.IntegerField(null=True)
+    enterq = models.DateTimeField(null=True)
+    leaveq = models.DateTimeField(null=True)
+    endcall = models.DateTimeField(null=True)
+    disposition = models.CharField(max_length=45, null=True)
+    amaflags = models.IntegerField(null=True)
+    accountcode = models.CharField(max_length=20, null=True)
+    userfield = models.CharField(max_length=225, null=True)
+    uniqueid = models.CharField(max_length=32, null=True)
+    linkedid = models.CharField(max_length=32, null=True)
+    sequence = models.CharField(max_length=32, null=True)
+    peeraccount = models.CharField(max_length=32, null=True)
+    import_cdr = models.IntegerField(null=True)
+
+
+    @classmethod
+    def fetch_voice_cdr_data(cls):
+        voice_server_connection = mysql.connector.connect(host='voice.tmcg.co.ug', database='cdr', user='view',
+                                                          password='Select')
+        voice_cur = voice_server_connection.cursor()
+        voice_cur.execute("SELECT * from cdr")
+        voice_results = voice_cur.fetchall()
+
+        for item in voice_results:
+            if not cls.cdr_exists(item[0]):
+                cls.objects.create(acctid=item[0], calldate=item[1], clid=item[2], src=item[3],dst=item[4],
+                                   dcontext=item[5], channel=item[6], dstchannel=item[7], lastapp=item[8],
+                                   lastdata=item[9], duration=item[10], billsec=item[11],
+                                   enterq=item[12], leaveq=item[13], endcall=item[14], disposition=item[15],
+                                   amaflags=item[16], accountcode=item[17], userfield=item[18], uniqueid=item[19],
+                                   linkedid=item[20], sequence=item[21], peeraccount=item[22], import_cdr=item[23])
+
+
+    @classmethod
+    def cdr_exists(cls, acctid):
+        return cls.objects.filter(acctid=acctid).exists()
