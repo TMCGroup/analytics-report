@@ -1,6 +1,5 @@
 .idea
 db.sqlite3
-analyticreports/settings.py
 migrations/*
 .env
 
