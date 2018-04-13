@@ -1,5 +1,6 @@
 from django.contrib import admin
-from .models import Contact, Group, Run, Flow, Message, Workspace, Project, CampaignEvent, Campaign, Voice, Email, Value
+from .models import Contact, Group, Run, Flow, Message, Workspace, Project, CampaignEvent, Campaign, Voice, Email, \
+    Value, ArtContact
 
 
 class EmailAdmin(admin.ModelAdmin):
@@ -35,14 +36,14 @@ class ProjectAdmin(admin.ModelAdmin):
 class ContactAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'language', 'urns', 'groups', 'blocked', 'stopped',
                     'created_on', 'modified_on', 'created_at')
-    list_filter = ('created_on', 'modified_on', 'created_at', 'stopped')
+    list_filter = ('created_on', 'modified_on', 'created_at', 'stopped', 'language')
     search_fields = ['name', 'urns', 'groups']
 
 
 class MessageAdmin(admin.ModelAdmin):
     list_display = ('contact', 'urn', 'direction', 'type', 'status',
                     'visibility', 'text', 'labels', 'created_on', 'sent_on', 'modified_on', 'created_at', 'modified_at')
-    list_filter = ('created_on', 'modified_on', 'created_at', 'modified_at', 'status', 'type')
+    list_filter = ('created_on', 'modified_on', 'created_at', 'status', 'type', 'direction')
     search_fields = ['urn', 'text', 'status']
 
 
@@ -60,8 +61,9 @@ class GroupAdmin(admin.ModelAdmin):
 
 class RunAdmin(admin.ModelAdmin):
     list_display = (
-        'id', 'run_id', 'flow', 'contact', 'responded', 'exit_type', 'exited_on', 'created_on', 'modified_on',
+        'id', 'run_id', 'flow', 'contact', 'responded', 'values', 'exit_type', 'exited_on', 'created_on', 'modified_on',
         'created_at', 'modified_at')
+    list_filter = ('created_on', 'modified_on', 'created_at', 'responded', 'exit_type')
     search_fields = ['run_id', 'contact', 'flow']
 
 
@@ -82,3 +84,4 @@ admin.site.register(Flow, FlowAdmin)
 admin.site.register(Campaign)
 admin.site.register(CampaignEvent)
 admin.site.register(Value, ValueAdmin)
+admin.site.register(ArtContact)

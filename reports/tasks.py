@@ -4,7 +4,7 @@ from celery.schedules import crontab
 from celery.task import periodic_task
 from celery.utils.log import get_task_logger
 from .models import Email, Message, Workspace, Run, Project
-from .views import send_csv_attachment_email
+from .views import email_report
 
 
 @shared_task
@@ -23,6 +23,6 @@ def get_hiwa_data():
 def send_emails():
     projects = Project.objects.all()
     for project in projects:
-        send_csv_attachment_email(request, project_id=project.id)
+        email_report(project_id=project.id)
     return
 

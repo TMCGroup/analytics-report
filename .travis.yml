@@ -1,18 +1,27 @@
 language: python
 python:
   - "2.7"
-  - "3.4"
-  - "3.5"
-  - "3.6"
 
 services:
   - postgresql
 
+env:
+  - DEBUG=True
+  - DB_NAME=travis_ci_test
+  - DB_USER=postgres
+  - EMAIL_USE_TLS=True
+  - EMAIL_HOST=smtp.gmail.com
+  - EMAIL_PORT=587
+  - ALLOWED_HOSTS="*"
+
+
 # command to install dependencies
 install: "pip install -r requirements.pip"
+
 
 before_script:
   - psql -c 'create database travis_ci_test;' -U postgres
 
 # command to run tests
-script: "python manage.py test"
+script:
+  - python manage.py test

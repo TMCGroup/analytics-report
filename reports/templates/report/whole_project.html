@@ -13,7 +13,7 @@
     {% for project_group in project_group_list %}
 
     <div class="row">
-    <div class="col-md-3 col-sm-6 col-xs-12">
+    <div class="col-md-4 col-sm-6 col-xs-12">
           <div class="info-box">
             <span class="info-box-icon bg-aqua"><i class="fa fa-users"></i></span>
 
@@ -25,7 +25,7 @@
           </div>
           <!-- /.info-box -->
     </div>
-    <div class="col-md-3 col-sm-6 col-xs-12">
+    <div class="col-md-4 col-sm-6 col-xs-12">
           <div class="info-box">
             <span class="info-box-icon bg-green"><i class="fa fa-envelope-o"></i></span>
 
@@ -37,7 +37,7 @@
           </div>
           <!-- /.info-box -->
     </div>
-    <div class="col-md-3 col-sm-6 col-xs-12">
+    <div class="col-md-4 col-sm-6 col-xs-12">
           <div class="info-box">
             <span class="info-box-icon bg-green"><i class="fa  fa-envelope"></i></span>
 
@@ -49,35 +49,77 @@
           </div>
           <!-- /.info-box -->
     </div>
-    <div class="col-md-3 col-sm-6 col-xs-12">
-          <div class="info-box">
-            <span class="info-box-icon bg-yellow"><i class="fa fa-money"></i></span>
-
-            <div class="info-box-content">
-              <span class="info-box-text">Messages Cost</span>
-              <span class="info-box-number">{{ project_messages_cost }}<small>Shs</small></span>
-            </div>
-            <!-- /.info-box-content -->
-          </div>
-          <!-- /.info-box -->
-    </div>
+{#    <div class="col-md-3 col-sm-6 col-xs-12">#}
+{#          <div class="info-box">#}
+{#            <span class="info-box-icon bg-yellow"><i class="fa fa-money"></i></span>#}
+{##}
+{#            <div class="info-box-content">#}
+{#              <span class="info-box-text">Messages Cost</span>#}
+{#              <span class="info-box-number">{{ project_messages_cost }}<small>Shs</small></span>#}
+{#            </div>#}
+{#            <!-- /.info-box-content -->#}
+{#          </div>#}
+{#          <!-- /.info-box -->#}
+{#    </div>#}
     </div>
 
     <div class="row">
     <div class="box">
     <div class="box-header with-border">
-        <h3 class="box-title">{{ project.name }} Weekly Summary</h3>
+        <h3 class="box-title">{{ project.name }} Message Delivery Summary</h3>
     </div>
     <div class="box-body">
-        <div class="col-md-6 col-sm-6 col-xs-6">
-            {% include_container chart1_container  400 400 %}
+        <div class="col-md-6 col-sm-12 col-xs-12">
+
+            {% include_container chart1_container  600 400 %}
         </div>
-        <div class="col-md-6 col-sm-6 col-xs-6">
-            {% include_container chart2_container  400 400 %}
-            <br>{{ x2_data }}
-            <br>{{ y2_data }}
-            <br>{{ y2_data1 }}
-        </div>
+        <div class="row">
+{#                <div class="col-sm-3 col-xs-6">#}
+{#                  <div class="description-block border-right">#}
+{#                    <span class="description-percentage text-green"><i class="fa fa-caret-up">#}
+{#                    </i> {{ weekly_contact_percentage }}%</span>#}
+{#                    <h5 class="description-header">{{ weekly_contacts.count }}</h5>#}
+{#                    <span class="description-text">New weekly contacts</span>#}
+{#                  </div>#}
+{#                  <!-- /.description-block -->#}
+{#                </div>#}
+                <!-- /.col -->
+                <div class="col-sm-4 col-xs-6">
+                  <div class="description-block border-right">
+                    <span class="description-percentage text-yellow"><i class="fa fa-caret-left"></i>
+                        {{ percentage_weekly_hanging_messages }}%</span>
+                    <h5 class="description-header">{{ weekly_hanging_messages}}</h5>
+                    <span class="description-text">Hanging/Wired Messages</span>
+                  </div>
+                  <!-- /.description-block -->
+                </div>
+                <!-- /.col -->
+                <div class="col-sm-4 col-xs-6">
+                  <div class="description-block border-right">
+                    <span class="description-percentage text-green"><i class="fa fa-caret-up"></i>
+                        {{ percentage_weekly_delivered_messages }}%</span>
+                    <h5 class="description-header">{{ weekly_delivered_messages.count }}</h5>
+                    <span class="description-text">Delivered Messages</span>
+                  </div>
+                  <!-- /.description-block -->
+                </div>
+                <!-- /.col -->
+                <div class="col-sm-4 col-xs-6">
+                  <div class="description-block">
+                    <span class="description-percentage text-red"><i class="fa fa-caret-down"></i>
+                        {{ percentage_weekly_failed_messages }}%</span>
+                    <h5 class="description-header">{{ weekly_failed_messages.count }}</h5>
+                    <span class="description-text">Failed Messages</span>
+                  </div>
+                  <!-- /.description-block -->
+                </div>
+              </div>
+{#        <div class="col-md-6 col-sm-6 col-xs-6">#}
+{#            {% include_container chart2_container  400 400 %}#}
+{#            <br>{{ x2_data }}#}
+{#            <br>{{ y2_data }}#}
+{#            <br>{{ y2_data1 }}#}
+{#        </div>#}
 
     </div>
     <div class="box-footer">

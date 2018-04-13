@@ -17,9 +17,13 @@
         <ul class="treeview-menu">
             <li><a href="{% url 'template_one' project.id %}"><i class="fa fa-history"></i>
                 <span>{{ project.name }} Details</span></a></li>
+            <li><a href="{% url 'view-whole-project' project.id %}"><i class="fa fa-history"></i>
+                <span>{{ project.name }} Whole Project View</span></a></li>
+            <li><a href="{% url 'csv-messages' project.id %}"><i class="fa fa-download"></i>
+                <span>Download Project Messages</span></a></li>
             <li><a href="{% url 'csv' project.id %}"><i class="fa fa-download"></i>
                 <span>Download CSV File</span></a></li>
-            <li><a href="{% url 'email-csv' project.id %}"><i class="fa fa-paper-plane"></i>
+            <li><a href="{% url 'email' project.id %}"><i class="fa fa-paper-plane"></i>
                 <span>Send Report Email</span></a></li>
 
         </ul>

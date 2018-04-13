@@ -1,10 +1,25 @@
 import datetime
-
 from django.test import TestCase
 from django.utils import timezone
 from temba_client.v2 import TembaClient
+from .models import Contact, Message, Group, Run, Flow, Workspace, Project, Value, Email, Voice, CDR, ArtContact
+from django.conf import settings
+from django.core.mail import EmailMessage, EmailMultiAlternatives
+from django.template.loader import render_to_string
 
-from .models import Contact, Message, Group, Run, Value, Flow, Workspace, Project, Email, Voice
+
+def get_project_groups_list(project_groups):
+    project_groups_list = []
+    for group in project_groups:
+        project_groups_list.append(group)
+    return project_groups_list
+
+
+def get_project_contacts_list(contacts):
+    contacts_list = []
+    for contact in contacts:
+        contacts_list.append(contact)
+    return contacts_list
 
 
 class DumpTest(TestCase):
@@ -12,22 +27,9 @@ class DumpTest(TestCase):
         self.assertEquals(1 + 1, 2)
 
 
-class TestWorkspace(TestCase):
-    def setUp(self):
-        Contact.objects.create(uuid="abc4496b-f11f-4786-b967-db824f0c659c", urns="+256773435153",
-                               created_on=datetime.datetime.now(), modified_on=datetime.datetime.now())
-
-    def test_get_rapidpro_workspaces(self):
-        Workspace.objects.create(name='Test Workspace', host='hiwa.tmcg.co.ug',
-                                 key='1da6d399139139812e2f949a64ce80264184996f')
-        workspaces = Workspace.objects.count()
-        self.assertEqual(workspaces, Workspace.get_rapidpro_workspaces())
-
-
-class TestGroup(TestCase):
-
+class GroupTest(TestCase):
     def test_add_groups(self):
-        client = TembaClient('hiwa.tmcg.co.ug', '1da6d399139139812e2f949a64ce80264184996f')
+        client = TembaClient('hiwa.tmcg.co.ug', 'f7f5d2ae2e5d37e9e879cc7f8375d1b980b6f3e8 ')
         group_count = Group.objects.count()
         added_groups = Group.add_groups(client=client)
         self.assertEquals(Group.objects.count(), group_count + added_groups)
@@ -45,9 +47,18 @@ class TestGroup(TestCase):
         self.assertEquals(Group.group_exists(qc_mock_group), True)
 
 
-class TestContact(TestCase):
+class ContactTest(TestCase):
+    def setUp(self):
+        group = Group.objects.create(uuid="23fg", name="test-group", count=2)
+        Contact.objects.create(uuid="aa221b20-44a8-4b90-9ab9-b6bf5d44d3ef", name="name-test", language="language-test",
+                               urns="urns-test",
+                               groups=group, fields="fields-test", blocked=False, stopped=False,
+                               created_on=datetime.datetime.now(), modified_on=datetime.datetime.now())
+        project_one = Project.objects.create(name='Test Project One', lead='Test Lead')
+        project_one.group.add(group)
+
     def test_save_contacts(self):
-        client = TembaClient('hiwa.tmcg.co.ug', '1da6d399139139812e2f949a64ce80264184996f')
+        client = TembaClient('hiwa.tmcg.co.ug', 'f7f5d2ae2e5d37e9e879cc7f8375d1b980b6f3e8 ')
         contact_count = Contact.objects.count()
         added_contacts = Contact.save_contacts(client=client)
         self.assertEquals(Contact.objects.count(), contact_count + added_contacts)
@@ -77,18 +88,54 @@ class TestContact(TestCase):
                                created_on=None, modified_on=None)
         self.assertEquals(Contact.contact_exists(qc_mock_contact), True)
 
+    def test_get_all_contacts(self):
+        contacts = Contact.objects.all()
+        # self.assertQuerysetEqual(Contact.get_all_contacts(), ['<Contact: urns-test>'])
+        self.assertQuerysetEqual(Contact.get_all_contacts(), map(repr, contacts))
 
-class TestMessage(TestCase):
+    def test_get_project_contacts(self):
+        project = Project.objects.first()
+        project_groups = project.group.all()
+        project_groups_list = get_project_groups_list(project_groups)
+        contacts = Contact.objects.all()
+        self.assertQuerysetEqual(Contact.get_project_contacts(project_groups_list), map(repr, contacts))
+
+    def test_get_project_contacts_count(self):
+        pass
+
+
+class MessageTest(TestCase):
     def setUp(self):
         group = Group.objects.create(uuid="23fg", name="test-group", count=2)
-        Contact.objects.create(uuid="aa221b20-44a8-4b90-9ab9-b6bf5d44d3ef", name="name-test", language="language-test", urns="urns-test",
-                               groups=group, fields="fields-test", blocked=False, stopped=False,
-                               created_on=None, modified_on=None)
+        contact = Contact.objects.create(uuid="test-uuid", name="name-test", language="language-test",
+                                         urns="urns-test",
+                                         groups=group, fields="fields-test", blocked=False, stopped=False,
+                                         created_on=None, modified_on=None)
+        project_one = Project.objects.create(name='Test Project One', lead='Test Lead')
+        project_one.group.add(group)
+        Message.objects.create(id=1, msg_id=1001, broadcast=1, contact=contact, urn="tel:urns-test",
+                               channel="channel-test",
+                               direction="in", type="type-test", status="failed",
+                               visibility="visibility-test", text="text-test", labels="labels-test",
+                               created_on=(datetime.datetime.now() - datetime.timedelta(1)),
+                               sent_on=datetime.datetime.now(),
+                               modified_on=(datetime.datetime.now() - datetime.timedelta(1)))
+        Message.objects.create(id=2, msg_id=1002, broadcast=1, contact=contact, urn="tel:urns-test",
+                               channel="channel-test",
+                               direction="out", type="type-test", status="delivered",
+                               visibility="visibility-test", text="text-test", labels="labels-test",
+                               created_on=datetime.datetime.now(),
+                               sent_on=datetime.datetime.now(),
+                               modified_on=(datetime.datetime.now() - datetime.timedelta(1)))
 
     def test_save_messages(self):
-        client = TembaClient('hiwa.tmcg.co.ug', '1da6d399139139812e2f949a64ce80264184996f')
+        client = TembaClient('hiwa.tmcg.co.ug', 'f7f5d2ae2e5d37e9e879cc7f8375d1b980b6f3e8 ')
         message_count = Message.objects.count()
-        added_messages = Message.save_messages(client=client)
+        contacts = Contact.objects.all()
+        added_messages = 0
+        for contact in contacts:
+            added_messages = + Message.save_messages(client=client, contact=contact)
+
         self.assertEquals(Message.objects.count(), message_count + added_messages)
 
     def test_message_exists(self):
@@ -119,23 +166,68 @@ class TestMessage(TestCase):
                             visibility="visibility-test", text="text-test", labels="labels-test", created_on=None,
                             sent_on=None, modified_on=None)
         self.assertEquals(Message.message_exists(qc_mock_message), False)
-        Message.objects.create(id=1000, msg_id=1000, broadcast=1, contact=contact, urn="urn-test", channel="channel-test",
+        Message.objects.create(id=1000, msg_id=1000, broadcast=1, contact=contact, urn="urn-test",
+                               channel="channel-test",
                                direction="direction-test", type="type-test", status="status-test",
                                visibility="visibility-test", text="text-test", labels="labels-test", created_on=None,
                                sent_on=None, modified_on=None)
         self.assertEquals(Message.message_exists(qc_mock_message), True)
 
+    def test_get_all_specific_incoming_messages(self):
+        project = Project.objects.first()
+        project_groups = project.group.all()
+        project_groups_list = []
+        for group in project_groups:
+            project_groups_list.append(group)
+        contacts = Contact.objects.all()
+        contacts_list = []
+        for contact in contacts:
+            contacts_list.append(contact)
+        incoming_messages = Message.objects.filter(direction='in').all()
+        self.assertQuerysetEqual(Message.get_all_specific_incoming_messages(contacts_list),
+                                 map(repr, incoming_messages))
 
-class TestRun(TestCase):
+    def test_get_weekly_failed_messages(self):
+        contacts = Contact.objects.all()
+        contacts_list = get_project_contacts_list(contacts)
+        date_diff = datetime.datetime.now() - datetime.timedelta(days=7)
+        weekly_failed_messages = Message.objects.filter(status="failed", direction="out",
+                                                        sent_on__range=(date_diff, datetime.datetime.now())).all()
+        self.assertQuerysetEqual(Message.get_weekly_failed_messages(contacts_list), map(repr, weekly_failed_messages),
+                                 msg=False, transform=repr)
+
+    def test_get_weekly_hanging_messages(self):
+        contacts = Contact.objects.all()
+        contacts_list = get_project_contacts_list(contacts)
+        date_diff = datetime.datetime.now() - datetime.timedelta(days=7)
+        weekly_failed_messages = Message.objects.filter(direction="out",
+                                                        sent_on__range=(date_diff, datetime.datetime.now())).exclude(
+            status__in=['delivered', 'failed', 'handled', 'queued']).all()
+        self.assertQuerysetEqual(Message.get_weekly_hanging_messages(contacts_list), map(repr, weekly_failed_messages),
+                                 msg=False, transform=repr)
+
+    def test_get_weekly_delivered_messages(self):
+        contacts = Contact.objects.all()
+        contacts_list = get_project_contacts_list(contacts)
+        date_diff = datetime.datetime.now() - datetime.timedelta(days=7)
+        weekly_failed_messages = Message.objects.filter(status="delivered", direction="out",
+                                                        sent_on__range=(date_diff, datetime.datetime.now())).all()
+        self.assertQuerysetEqual(Message.get_weekly_delivered_messages(contacts_list),
+                                 map(repr, weekly_failed_messages),
+                                 msg=False, transform=repr)
+
+
+class RunTest(TestCase):
     def setUp(self):
         group = Group.objects.create(uuid="23fg", name="test-group", count=2)
-        Contact.objects.create(uuid="aa221b20-44a8-4b90-9ab9-b6bf5d44d3ef", name="name-test", language="language-test", urns="urns-test",
+        Contact.objects.create(uuid="aa221b20-44a8-4b90-9ab9-b6bf5d44d3ef", name="name-test", language="language-test",
+                               urns="urns-test",
                                groups=group, fields="fields-test", blocked=False, stopped=False,
                                created_on=None, modified_on=None)
         Flow.objects.create(uuid='788ghh', name='flow-test', expires=1, created_on=datetime.datetime.now())
 
     def test_add_runs(self):
-        client = TembaClient('hiwa.tmcg.co.ug', '1da6d399139139812e2f949a64ce80264184996f')
+        client = TembaClient('hiwa.tmcg.co.ug', 'f7f5d2ae2e5d37e9e879cc7f8375d1b980b6f3e8 ')
         run_count = Run.objects.count()
         added_runs = Run.add_runs(client)
         self.assertEquals(Run.objects.count(), run_count + added_runs)
@@ -161,38 +253,19 @@ class TestRun(TestCase):
         self.assertEquals(Run.run_exists(rapidpro_mock_run), True)
 
 
-class TestFlow(TestCase):
+class FlowTest(TestCase):
     def setUp(self):
         Flow.objects.create(uuid='788ghh', name='flow-test', expires=1, created_on=datetime.datetime.now())
 
     def test_add_flows(self):
-        client = TembaClient('hiwa.tmcg.co.ug', '1da6d399139139812e2f949a64ce80264184996f')
+        client = TembaClient('hiwa.tmcg.co.ug', 'f7f5d2ae2e5d37e9e879cc7f8375d1b980b6f3e8 ')
         flow = Flow.objects.first()
         flow_count = Flow.objects.count()
         added_flow = Flow.add_flows(client)
         self.assertEquals(Flow.objects.count(), flow_count + added_flow)
 
 
-# class TestValue(TestCase):
-#     def setUp(self):
-#         group = Group.objects.create(uuid="23fg", name="test-group", count=2)
-#         Contact.objects.create(uuid="uuid-test", name="name-test", language="language-test",
-#                                urns="urns-test", groups=group, fields="fields-test", blocked=False,
-#                                stopped=False, created_on=None, modified_on=None)
-#         c = Contact.objects.first()
-#         run = Run.objects.create(id=6, run_id=6, responded=False, created_on=timezone.now(), modified_on=timezone.now(),
-#                                  exit_type='completed', contact=c)
-#         Value.objects.create(value='testing', run=run)
-#
-#     def test_add_values(self):
-#         run_object = Run.objects.first()
-#         values = Value.objects.all()
-#         value_count = Value.objects.count()
-#         added_values = Value.add_values(run_object, values)
-#         self.assertEquals(Value.objects.count(), value_count + added_values)
-
-
-class TestProject(TestCase):
+class ProjectTest(TestCase):
     def setUp(self):
         group_one = Group.objects.create(name='Test Group One', uuid='random number one', count=1)
         group_two = Group.objects.create(name='Test Group Two', uuid='random number two', count=2)
@@ -205,45 +278,65 @@ class TestProject(TestCase):
 
     def test_get_all_projects(self):
         projects = Project.objects.filter(active=True).all()
-
         self.assertEquals(projects.count(), Project.get_all_projects().count())
 
 
-# class TestEmail(TestCase):
-#     def setUp(self):
-#         group_one = Group.objects.create(name='Test Group One', uuid='random number one', count=1)
-#         group_two = Group.objects.create(name='Test Group Two', uuid='random number two', count=2)
-#         project_one = Project.objects.create(name='Test Project One',  lead='Test Lead')
-#         project_one.group.add(group_one, group_two)
-#         project_two = Project.objects.create(name='Test Project Two', lead='Test Lead')
-#         project_two.group.add(group_one, group_two)
-#         email_one = Email.objects.create(name="Test Email One", email_address="test1@email.com")
-#         email_one.project.add(project_one, project_two)
-#         email_two = Email.objects.create(name="Test Email Two", email_address="test2@email.com")
-#         email_two.project.add(project_one)
-#
-#     def test_get_report_emails(self):
-#         project = Project.objects.first()
-#         emails = Email.objects.filter(project__in=[project]).all()
-#         emailing_list = []
-#         for email in emails:
-#             emailing_list.append(email.email_address)
-#
-#         report_datetime = datetime.datetime.now()
-#
-#         email_subject = '%s Weekly ( %s ) Report' % (project.name, report_datetime)
-#         email_body = '<h4>Please find attached the weekly report.</h4>'
-#
-#         email_message = EmailMessage(email_subject, email_body, settings.EMAIL_HOST_USER, emailing_list)
-#         email_message.content_subtype = "html"
-#         email_message_test = Email.get_report_emails(project_id=project.id)
-#         self.assertEquals(email_message, email_message_test)
+class EmailTest(TestCase):
+    def setUp(self):
+        group_one = Group.objects.create(name='Test Group One', uuid='random number one', count=1)
+        group_two = Group.objects.create(name='Test Group Two', uuid='random number two', count=2)
+        project_one = Project.objects.create(name='Test Project One', lead='Test Lead')
+        project_one.group.add(group_one, group_two)
+        project_two = Project.objects.create(name='Test Project Two', lead='Test Lead')
+        project_two.group.add(group_one)
+        email_one = Email.objects.create(name="Test Email One", email_address="test1@email.com")
+        email_one.project.add(project_one)
+        email_one.project.add(project_two)
+        email_two = Email.objects.create(name="Test Email Two", email_address="test2@email.com")
+        email_two.project.add(project_one)
 
-class TestVoice(TestCase):
+    def test_get_project_mailing_list(self):
+        project = Project.objects.get(name='Test Project One')
+        mailing_list = ["test1@email.com", "test2@email.com"]
+        mailing_list_test = Email.get_project_mailing_list(project.id)
+        self.assertEquals(mailing_list, mailing_list_test)
+
+    def test_get_report_emails(self):
+        project = Project.objects.get(name='Test Project One')
+        emails = Email.objects.filter(project__name=project.name).all()
+        report_datetime = datetime.datetime.now()
+        emailing_list = Email.get_project_mailing_list(project.id)
+        email_subject = '%s Weekly ( %s ) Report' % (project.name, report_datetime)
+        email_body = render_to_string('report/report_email_body.html')
+        email_message = EmailMultiAlternatives(email_subject, email_body, settings.EMAIL_HOST_USER, emailing_list)
+        self.assertEquals(email_message.recipients(), Email.get_report_emails(project_id=project.id).recipients())
+
+
+class VoiceTest(TestCase):
+    def setUp(self):
+        group_one = Group.objects.create(name='Test Group One', uuid='random number one', count=1)
+        project_one = Project.objects.create(name='SMS MAAMA', lead='Test Lead')
+        project_one.group.add(group_one)
 
     def test_get_data(self):
+        project = Project.objects.first()
         voice_count = Voice.objects.count()
-        added_voice = Voice.get_data(project_name="SMS MAAMA")
+        Voice.get_data(project_name=project.name)
+        self.assertGreaterEqual(Voice.objects.count(), voice_count, msg=True)
 
-        self.assertEquals(Voice.objects.count(), voice_count+added_voice)
+class CDRTest(TestCase):
+    def setUp(self):
+        CDR.objects.create(acctid=1, calldate=datetime.datetime.now(), clid='2567XXXXXX')
 
+    def test_cdr_exists(self):
+        cdr_entry = CDR.objects.first()
+        self.assertEquals(CDR.cdr_exists(cdr_entry.acctid), True)
+
+class ARTContactTest(TestCase):
+    def setUp(self):
+        ArtContact.objects.create(voice_id=1, gender='female',telephone_number=256778988224,
+                                  created_at=datetime.datetime.now(), created_by=1)
+
+    def test_art_contact_exists(self):
+        art_contact = ArtContact.objects.first()
+        self.assertEquals(ArtContact.art_contact_exists(art_contact.voice_id), True)
