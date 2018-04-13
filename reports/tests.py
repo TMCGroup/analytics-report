@@ -2,7 +2,7 @@ import datetime
 from django.test import TestCase
 from django.utils import timezone
 from temba_client.v2 import TembaClient
-from .models import Contact, Message, Group, Run, Flow, Workspace, Project, Value, Email, Voice
+from .models import Contact, Message, Group, Run, Flow, Workspace, Project, Value, Email, Voice, CDR, ArtContact
 from django.conf import settings
 from django.core.mail import EmailMessage, EmailMultiAlternatives
 from django.template.loader import render_to_string
@@ -25,14 +25,6 @@ def get_project_contacts_list(contacts):
 class DumpTest(TestCase):
     def test_one_plus_one(self):
         self.assertEquals(1 + 1, 2)
-
-
-class WorkspaceTest(TestCase):
-    def test_get_rapidpro_workspaces(self):
-        Workspace.objects.create(name='Test Workspace', host='hiwa.tmcg.co.ug',
-                                 key='f7f5d2ae2e5d37e9e879cc7f8375d1b980b6f3e8')
-        workspaces = Workspace.objects.count()
-        self.assertEqual(workspaces, Workspace.get_rapidpro_workspaces())
 
 
 class GroupTest(TestCase):
@@ -121,14 +113,14 @@ class MessageTest(TestCase):
                                          created_on=None, modified_on=None)
         project_one = Project.objects.create(name='Test Project One', lead='Test Lead')
         project_one.group.add(group)
-        Message.objects.create(id=1, msg_id=1001, broadcast=1, contact=contact, urn="urns-test",
+        Message.objects.create(id=1, msg_id=1001, broadcast=1, contact=contact, urn="tel:urns-test",
                                channel="channel-test",
                                direction="in", type="type-test", status="failed",
                                visibility="visibility-test", text="text-test", labels="labels-test",
                                created_on=(datetime.datetime.now() - datetime.timedelta(1)),
                                sent_on=datetime.datetime.now(),
                                modified_on=(datetime.datetime.now() - datetime.timedelta(1)))
-        Message.objects.create(id=2, msg_id=1002, broadcast=1, contact=contact, urn="urns-test",
+        Message.objects.create(id=2, msg_id=1002, broadcast=1, contact=contact, urn="tel:urns-test",
                                channel="channel-test",
                                direction="out", type="type-test", status="delivered",
                                visibility="visibility-test", text="text-test", labels="labels-test",
@@ -332,27 +324,19 @@ class VoiceTest(TestCase):
         Voice.get_data(project_name=project.name)
         self.assertGreaterEqual(Voice.objects.count(), voice_count, msg=True)
 
-# class ValueTest(TestCase):
-#     def setUp(self):
-#         group = Group.objects.create(uuid="23fg", name="test-group", count=2)
-#         Contact.objects.create(uuid="uuid-test", name="name-test", language="language-test",
-#                                urns="urns-test", groups=group, fields="fields-test", blocked=False,
-#                                stopped=False, created_on=None, modified_on=None)
-#         c = Contact.objects.first()
-#         run = Run.objects.create(id=6, run_id=6, responded=False, created_on=timezone.now(), modified_on=timezone.now(),
-#                                  exit_type='completed', contact=c,
-#                                  values={"color": {"value": "blue", "category": "Blue",
-#                                                    "node":
-#                                                        "fc32aeb0-ac3e-42a8-9ea7-10248"
-#                                                        "fdf52a1",
-#                                                    "time": "2015-11-11T13:03:51.63566"
-#                                                            "2Z"}, "reason": {
-#                                      "value": "Because it's the color of sky", "category": "All Responses",
-#                                      "node": "4c9cb68d-474f-4b9a-b65e-c2aa593a3466",
-#                                      "time": "2015-11-11T13:05:57.576056Z"}})
-#
-#     def test_add_values(self):
-#         run = Run.objects.first()
-#         value_count = Value.objects.count()
-#         added_values = Value.add_values(run, run.values)
-#         self.assertEquals(Value.objects.count(), value_count + added_values)
+class CDRTest(TestCase):
+    def setUp(self):
+        CDR.objects.create(acctid=1, calldate=datetime.datetime.now(), clid='2567XXXXXX')
+
+    def test_cdr_exists(self):
+        cdr_entry = CDR.objects.first()
+        self.assertEquals(CDR.cdr_exists(cdr_entry.acctid), True)
+
+class ARTContactTest(TestCase):
+    def setUp(self):
+        ArtContact.objects.create(voice_id=1, gender='female',telephone_number=256778988224,
+                                  created_at=datetime.datetime.now(), created_by=1)
+
+    def test_art_contact_exists(self):
+        art_contact = ArtContact.objects.first()
+        self.assertEquals(ArtContact.art_contact_exists(art_contact.voice_id), True)

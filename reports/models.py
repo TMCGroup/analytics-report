@@ -808,19 +808,25 @@ class ArtContact(models.Model):
 
     @classmethod
     def fetch_voice_art_contact_data(cls):
-        voice_server_connection = mysql.connector.connect(host='voice.tmcg.co.ug', database='cdr', user='view',
-                                                          password='Select')
-        voice_cur = voice_server_connection.cursor()
-        voice_cur.execute("SELECT * from art")
-        voice_results = voice_cur.fetchall()
+        try:
+            voice_server_connection = mysql.connector.connect(host=settings.VOICE_DB_HOST,
+                                                              database=settings.VOICE_DB_NAME,
+                                                              user=settings.VOICE_DB_USERNAME,
+                                                              password=settings.VOICE_DB_PASSWORD)
+            voice_cur = voice_server_connection.cursor()
+            voice_cur.execute("SELECT * from art")
+            voice_results = voice_cur.fetchall()
 
-        for item in voice_results:
-            if not cls.art_contact_exists(item[0]):
-                cls.objects.create(voice_id=item[0], name=item[1], language_preference=item[2], gender=item[3],
-                                   age=item[4], district=item[5], area=item[6], designation=item[7], sector=item[8],
-                                   telephone_number=item[9], alt_number=item[10], date_of_consent=item[11],
-                                   art_type=item[12], more_info=item[13], status=item[14], created_at=item[15],
-                                   created_by=item[16])
+            for item in voice_results:
+                if not cls.art_contact_exists(item[0]):
+                    cls.objects.create(voice_id=item[0], name=item[1], language_preference=item[2], gender=item[3],
+                                       age=item[4], district=item[5], area=item[6], designation=item[7], sector=item[8],
+                                       telephone_number=item[9], alt_number=item[10], date_of_consent=item[11],
+                                       art_type=item[12], more_info=item[13], status=item[14], created_at=item[15],
+                                       created_by=item[16])
+            voice_server_connection.close()
+        except mysql.connector.Error as err:
+            print("Unable to connect to Voice DB. Something went wrong: {}".format(err))
 
 
     @classmethod
@@ -857,20 +863,26 @@ class CDR(models.Model):
 
     @classmethod
     def fetch_voice_cdr_data(cls):
-        voice_server_connection = mysql.connector.connect(host='voice.tmcg.co.ug', database='cdr', user='view',
-                                                          password='Select')
-        voice_cur = voice_server_connection.cursor()
-        voice_cur.execute("SELECT * from cdr")
-        voice_results = voice_cur.fetchall()
+        try:
+            voice_server_connection = mysql.connector.connect(host=settings.VOICE_DB_HOST,
+                                                              database=settings.VOICE_DB_NAME,
+                                                              user=settings.VOICE_DB_USERNAME,
+                                                              password=settings.VOICE_DB_PASSWORD)
+            voice_cur = voice_server_connection.cursor()
+            voice_cur.execute("SELECT * from cdr")
+            voice_results = voice_cur.fetchall()
 
-        for item in voice_results:
-            if not cls.cdr_exists(item[0]):
-                cls.objects.create(acctid=item[0], calldate=item[1], clid=item[2], src=item[3],dst=item[4],
-                                   dcontext=item[5], channel=item[6], dstchannel=item[7], lastapp=item[8],
-                                   lastdata=item[9], duration=item[10], billsec=item[11],
-                                   enterq=item[12], leaveq=item[13], endcall=item[14], disposition=item[15],
-                                   amaflags=item[16], accountcode=item[17], userfield=item[18], uniqueid=item[19],
-                                   linkedid=item[20], sequence=item[21], peeraccount=item[22], import_cdr=item[23])
+            for item in voice_results:
+                if not cls.cdr_exists(item[0]):
+                    cls.objects.create(acctid=item[0], calldate=item[1], clid=item[2], src=item[3],dst=item[4],
+                                       dcontext=item[5], channel=item[6], dstchannel=item[7], lastapp=item[8],
+                                       lastdata=item[9], duration=item[10], billsec=item[11],
+                                       enterq=item[12], leaveq=item[13], endcall=item[14], disposition=item[15],
+                                       amaflags=item[16], accountcode=item[17], userfield=item[18], uniqueid=item[19],
+                                       linkedid=item[20], sequence=item[21], peeraccount=item[22], import_cdr=item[23])
+            voice_server_connection.close()
+        except mysql.connector.Error as err:
+            print("Unable to connect to Voice DB. Something went wrong: {}".format(err))
 
 
     @classmethod
