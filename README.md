@@ -1,6 +1,8 @@
+
 [![Build Status](https://travis-ci.org/faithNassiwa/analytics-report.svg?branch=master)](https://travis-ci.org/faithNassiwa/analytics-report)
 
-# Analytics Report 
+# Analytics Report
+
 Analytics Report is a TMCG Project used to get SMS and Voice Platform data into a local database
 for purposes of reporting.
 
