@@ -18,13 +18,10 @@ env:
 # command to install dependencies
 install: "pip install -r requirements.pip"
 
-mvn install:
-  - install-file "-DgroupId=org.mozilla" "-DartifactId=jss" "-Dversion=4.2.5" "-Dpackaging=jar" "-Dfile=C:\Users\AArmijos\workspace\componentes-1.0.4\deps\jss-4.2.5.jar"
 
 before_script:
   - psql -c 'create database travis_ci_test;' -U postgres
 
 # command to run tests
 script:
-  - travis_wait 30 mvn package -Dtestng=test.xml
   - python manage.py test
