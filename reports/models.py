@@ -212,10 +212,8 @@ class Contact(models.Model):
                     added += 1
 
                 contact = Contact.objects.filter(uuid=contact.uuid).first()
-                workspaces = Workspace.objects.all()
-                for workspace in workspaces:
-                    client = TembaClient(workspace.host, workspace.key)
-                    Message.save_messages(client, contact)
+                client = TembaClient(contact.workspace.host, contact.workspace.key)
+                Message.save_messages(client, contact)
 
         return added
 
@@ -327,14 +325,14 @@ class Message(models.Model):
     msg_id = models.IntegerField()
     broadcast = models.IntegerField(null=True)
     contact = models.ForeignKey(Contact, null=True, blank=True)
-    urn = models.CharField(max_length=200)
-    channel = models.CharField(max_length=200)
-    direction = models.CharField(max_length=200)
+    urn = models.CharField(max_length=200, null=True, blank=True)
+    channel = models.CharField(max_length=200, null=True, blank=True)
+    direction = models.CharField(max_length=200, null=True, blank=True)
     type = models.CharField(max_length=200, null=True, blank=True)
-    status = models.CharField(max_length=200)
-    visibility = models.CharField(max_length=200)
-    text = models.CharField(max_length=1000)
-    labels = models.CharField(max_length=200)
+    status = models.CharField(max_length=200, null=True, blank=True)
+    visibility = models.CharField(max_length=200, null=True, blank=True)
+    text = models.CharField(max_length=1000, null=True, blank=True)
+    labels = models.CharField(max_length=200, null=True, blank=True)
     created_on = models.DateTimeField(null=True, blank=True)
     sent_on = models.DateTimeField(null=True, blank=True)
     modified_on = models.DateTimeField(null=True, blank=True)
@@ -497,15 +495,9 @@ class Message(models.Model):
         date_diff = datetime.datetime.now() - datetime.timedelta(days=42)
         return cls.objects.filter(query, sent_on__range=(date_diff, datetime.datetime.now())).all().order_by('urn')
 
-    # @classmethod
-    # def get_all_project_outgoing_messages(cls, contacts_list):
-    #     query = reduce(operator.or_, (Q(urn__contains=contact) for contact in contacts_list))
-    #     date_diff = datetime.datetime.now() - datetime.timedelta(days=42)
-    #     return cls.objects.filter(query, sent_on__range=(date_diff, datetime.datetime.now())).all().order_by('urn')
-
     @classmethod
     def clean_message_urn(cls, message):
-        if 'tel:' in message.urn:
+        if message.urn is not None and 'tel:' in message.urn:
             return message.urn[4:]
         else:
             return message.urn

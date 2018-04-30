@@ -49,6 +49,8 @@ class GroupTest(TestCase):
 
 class ContactTest(TestCase):
     def setUp(self):
+        workspace = Workspace.objects.create(name='Test Workspace', host='hiwa.tmcg.co.ug',
+                                             key='f7f5d2ae2e5d37e9e879cc7f8375d1b980b6f3e8')
         group = Group.objects.create(uuid="23fg", name="test-group", count=2)
         Contact.objects.create(uuid="aa221b20-44a8-4b90-9ab9-b6bf5d44d3ef", name="name-test", language="language-test",
                                urns="urns-test",
@@ -58,9 +60,10 @@ class ContactTest(TestCase):
         project_one.group.add(group)
 
     def test_save_contacts(self):
-        client = TembaClient('hiwa.tmcg.co.ug', 'f7f5d2ae2e5d37e9e879cc7f8375d1b980b6f3e8 ')
+        client = TembaClient('hiwa.tmcg.co.ug', 'f7f5d2ae2e5d37e9e879cc7f8375d1b980b6f3e8')
         contact_count = Contact.objects.count()
-        added_contacts = Contact.save_contacts(client=client)
+        workspace = Workspace.objects.first()
+        added_contacts = Contact.save_contacts(client=client, workspace=workspace)
         self.assertEquals(Contact.objects.count(), contact_count + added_contacts)
 
     def test_contact_exists(self):
