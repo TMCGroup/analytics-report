@@ -35,8 +35,8 @@ class ProjectAdmin(admin.ModelAdmin):
 
 class ContactAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'language', 'urns', 'groups', 'blocked', 'stopped',
-                    'created_on', 'modified_on', 'created_at')
-    list_filter = ('created_on', 'modified_on', 'created_at', 'stopped', 'language')
+                    'created_on', 'modified_on', 'created_at', 'workspace')
+    list_filter = ('created_on', 'modified_on', 'created_at', 'stopped', 'language', 'workspace')
     search_fields = ['name', 'urns', 'groups']
 
 

@@ -36,7 +36,7 @@ class Workspace(models.Model):
         for workspace in workspaces:
             client = TembaClient(workspace.host, workspace.key)
             Group.add_groups(client=client)
-            Contact.save_contacts(client=client)
+            Contact.save_contacts(client=client, workspace=workspace)
             Flow.add_flows(client=client)
             Run.add_runs(client=client)
             Campaign.add_campaigns(client=client)
@@ -172,12 +172,13 @@ class Contact(models.Model):
     modified_on = models.DateTimeField(null=True)
     created_at = models.DateTimeField(auto_now=False, auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True, auto_now_add=False)
+    workspace = models.ForeignKey(Workspace, blank=True, null=True)
 
     class Meta:
         ordering = ['-created_on', ]
 
     @classmethod
-    def save_contacts(cls, client):
+    def save_contacts(cls, client, workspace):
         added = 0
         for contact_batch in client.get_contacts(after=month).iterfetches(retry_on_rate_exceed=True):
             for contact in contact_batch:
@@ -197,7 +198,7 @@ class Contact(models.Model):
                                                                  blocked=contact.blocked,
                                                                  stopped=contact.stopped,
                                                                  created_on=contact.created_on,
-                                                                 modified_on=contact.modified_on)
+                                                                 modified_on=contact.modified_on, workspace=workspace)
 
                 else:
                     cls.objects.create(uuid=contact.uuid, name=contact.name,
@@ -206,7 +207,7 @@ class Contact(models.Model):
                                        fields=contact.fields,
                                        blocked=contact.blocked, stopped=contact.stopped,
                                        created_on=contact.created_on,
-                                       modified_on=contact.modified_on)
+                                       modified_on=contact.modified_on, workspace=workspace)
 
                     added += 1
 
